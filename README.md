@@ -6,6 +6,6 @@ You can install this package from GitHub with the following R code:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("nalcala/PopGenBOunds")
+devtools::install_github("nalcala/PopGenBounds")
 ```
 
