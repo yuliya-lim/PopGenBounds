@@ -1,0 +1,821 @@
+# load libraries
+library(tidyverse)
+library(readxl)
+
+#functions
+## compute statistics
+Diff.M = function(freqs){
+  K=nrow(freqs)
+  M = max(colMeans(freqs))
+  HS = mean(1-rowSums(freqs**2))
+  HT = 1-sum(colMeans(freqs)**2)
+  FST = 1-HS/HT
+  GpST= FST*(K-1+HS)/(K-1)/(1-HS)
+  D = K/(K-1)*(HT-HS)/(1-HS)
+  return(c(M=M,FST = FST,GpST,D))
+}
+
+## bounds
+Fup = function(K,M){
+  s1 = K*M
+  J = ceiling(1/s1)
+  res = (K-1)*(1-s1*(J-1)*(2-J*s1))/(K-(1-s1*(J-1)*(2-J*s1)))*(s1<=1) + 
+    (K*(K-1)-s1**2+floor(s1)-2*(K-1)*(s1%%1)+(2*K-1)*(s1%%1)**2)/(K*(K-1) -s1**2-floor(s1)+2*s1-(s1%%1)**2)*(s1>1)
+  return(res)
+}
+
+Dup = function(K,M){
+  s1 = K*M
+  res = 1*(s1<=1) + (1-(s1**2-(s1%%1)**2-floor(s1))/(K-1)/(K-1+(s1%%1)**2+(1-s1%%1)**2) )*(s1>1)
+}
+
+Gpup = function(K,M){
+  s1 = K*M
+  J = ceiling(1/s1)
+  res = 1*(s1<=1) + #(K-1)*(1-s1*(J-1)*(2-J*s1))/(K-(1-s1*(J-1)*(2-J*s1)))*(s1<=1) + 
+    (K*(K-1)-s1**2+floor(s1)-2*(K-1)*(s1%%1)+(2*K-1)*(s1%%1)**2)/(K*(K-1) -s1**2-floor(s1)+2*s1-(s1%%1)**2)*(s1>1)/(K-1)/(K-1+(s1%%1)^2+(1-s1%%1)^2 )*(K^2 - K+1-(s1%%1)^2-(1-s1%%1)^2 )
+  return(res)
+}
+
+## plots
+
+### bounds 
+K=2
+M=seq(0,1,0.001)
+
+MF2 = cbind(M,Fup(2,M))
+MF3 = cbind(M,Fup(3,M))
+MF6 = cbind(M,Fup(6,M))
+MF40 = cbind(M,Fup(40,M))
+MF47 = cbind(M,Fup(47,M))
+
+MG2 = cbind(M,Gpup(2,M))
+MG3 = cbind(M,Gpup(3,M))
+MG6 = cbind(M,Gpup(6,M))
+MG40 = cbind(M,Gpup(40,M))
+MG47 = cbind(M,Gpup(47,M))
+
+MD2 = cbind(M,Dup(2,M))
+MD3 = cbind(M,Dup(3,M))
+MD6 = cbind(M,Dup(6,M))
+MD40 = cbind(M,Dup(40,M))
+MD47 = cbind(M,Dup(47,M))
+
+svg("Fig1_bounds.svg",h=3.5*3,w=3*4)
+par(mfrow=c(3,4),family="Times",cex=1.1)
+K=2
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),
+     ylab=expression(italic(F[ST])) , xaxs="i" , yaxs="i" )
+polygon(MF2 , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+
+K=3
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab="" , 
+     xaxs="i" , yaxs="i" )
+polygon(MF3 , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+
+K=6
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab="" , 
+     xaxs="i" , yaxs="i" )
+polygon(MF6 , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2)
+
+K=40
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab="" , 
+     xaxs="i" , yaxs="i" )
+polygon(MF40 , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2)
+
+# G'ST
+K=2
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab="",
+     ylab=expression(italic(G[ST])) , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MG2) , col =rgb(0.6,0.6,0.6),border = NA)
+#lines(M[M<1/K],((K-1)*M/(1-M)*(K**2-K+1-((K*M)%%1)**2-(1-(K*M)%%1)**2 )/(K-1)/(K-1+((K*M)%%1)**2+(1-(K*M)%%1)**2))[M<1/K] , lty=2)
+
+K=3
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab="",
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MG3) , col =rgb(0.6,0.6,0.6),border = NA)
+#lines(M[M<1/K],((K-1)*M/(1-M)*(K**2-K+1-((K*M)%%1)**2-(1-(K*M)%%1)**2 )/(K-1)/(K-1+((K*M)%%1)**2+(1-(K*M)%%1)**2))[M<1/K] , lty=2)
+
+K=6
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab="",
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MG6) , col =rgb(0.6,0.6,0.6),border = NA)
+#lines(M[M<1/K],((K-1)*M/(1-M)*(K**2-K+1-((K*M)%%1)**2-(1-(K*M)%%1)**2 )/(K-1)/(K-1+((K*M)%%1)**2+(1-(K*M)%%1)**2))[M<1/K] , lty=2)
+
+K=40
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab="",
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MG40) , col =rgb(0.6,0.6,0.6),border = NA)
+#lines(M[M<1/K],((K-1)*M/(1-M)*(K**2-K+1-((K*M)%%1)**2-(1-(K*M)%%1)**2 )/(K-1)/(K-1+((K*M)%%1)**2+(1-(K*M)%%1)**2))[M<1/K] , lty=2)
+
+# D
+K=2
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),
+     ylab=expression(italic(D)) , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MD2) , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+
+K=3
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MD3) , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+
+K=6
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MD6) , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+
+K=40
+plot(-1,-1, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),
+     ylab="" , xaxs="i" , yaxs="i" )
+polygon(rbind(c(0,0),MD40) , col =rgb(0.6,0.6,0.6),border = NA)
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+
+dev.off()
+
+
+### Areas
+M=seq(0,1-0.001,0.001)
+
+AF = sapply(2:1000, function(K) mean(Fup(K,M),na.rm=T) )
+AG = sapply(2:1000, function(K) mean(Gpup(K,M),na.rm=T) )
+AD = sapply(2:1000, function(K) mean(Dup(K,M),na.rm=T) )
+
+Area.tib = tibble(K=rep(2:1000,3),Area=c(AF,AG,AD),Statistic=rep(c("F","G'","D"),each=999))
+
+colors_stats = RColorBrewer::brewer.pal(3,"Set1")
+names(colors_stats) = c("F","G'","D")
+
+ggAreas = ggplot(Area.tib,aes(x=K,y=Area,col=Statistic)) + geom_line(lwd=1.5) + 
+  geom_point(data=Area.tib %>% filter(K%in%c(2,3,6,40)),cex=3) + 
+  theme_bw() + scale_x_log10(breaks=c(2,3,6,10,20,40,100,200,1000))  + 
+  scale_color_manual(values=colors_stats)
+
+ggsave("Fig_Areas.svg",ggAreas,height = 2.5,width=3.5)
+
+## simulations 
+require(phyclust)
+th.l=10**seq(-1,1,1)
+M.l=10**seq(-1,1,1)
+nsamp = 200
+I = 1000
+ms.l.K2   <- lapply(th.l, function(thtmp) lapply(M.l, function(Mtmp) ms(nsam = nsamp*2, nreps = I, opts = paste("-t",thtmp,"-I 2",nsamp,nsamp,Mtmp)  )  ) )
+#ms.l.K3   <- lapply(th.l, function(thtmp) lapply(M.l, function(Mtmp) ms(nsam = nsamp*3, nreps = "20000", opts = paste("-t",thtmp,"-I 3",nsamp,nsamp,nsamp,Mtmp)  )  ) )
+
+stsim = 5+(0:(I-1))*203
+
+F.K2= array(0, c(3, 3, I))
+D.K2= array(0, c(3, 3, I))
+Gp.K2= array(0, c(3, 3, I))
+M.K2= array(0, c(3, 3, I))
+K=2
+for(tt in 1:3){ # for each mutation rate
+  print(paste("tt=",tt))
+  for(ii in 1:3){ # for each migration rate
+    print(paste("ii=",ii))
+    data  = ms.l.K2[[tt]][[ii]]
+    stsim2rm = which(grepl(pattern="segsites: 0",x=data,perl=T))
+    if( length(stsim2rm)>0)  data = data[-c(stsim2rm,stsim2rm+1)]
+    stsim = which(grepl(pattern="positions",x=data,perl=T)) +1 #index of simul start
+    for(i in 1:length(stsim)){ # for each allele
+      alleles   = as.numeric( as.factor(sapply(1:K, function(k) data[(stsim[i]+(k-1)*nsamp):(stsim[i]+k*nsamp-1)] )) )
+      fal = sapply(1:K, function(k) sapply(1:max(alleles), function(i2) mean(alleles[(1+(k-1)*nsamp):(k*nsamp)]==i2)) )
+      Hs  = 1- mean( colSums(fal**2) )
+      ft  = rowMeans(fal)
+      Ht  = 1-sum( ft**2 )
+      F.K2[tt,ii,i] = 1 - Hs/Ht
+      Gp.K2[tt,ii,i] = (1 - Hs/Ht)*(K-1+Hs)/(K-1)/(1-Hs)
+      D.K2[tt,ii,i] = K/(K-1)*(Ht-Hs)/(1-Hs)
+      M.K2[tt,ii,i] = max(ft)
+    }
+  }
+}
+
+rm(data)  
+save(ms.l.K2, file = "ms.l.K2.Rdata" )
+rm(ms.l.K2) 
+gc()
+
+#plot
+library(KernSmooth)
+kern.l2 = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K2[j,i,1:1000],F.K2[j,i,1:1000]) ,
+                                                                                      bandwidth=0.02,
+                                                                                      gridsize = c(500L,500L), 
+                                                                                      range.x=list(c(-0.005,1+0.005),
+                                                                                                   c(-0.005,1+0.005)),
+                                                                                      truncate=F) ) )
+kern.l2.Gp = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K2[j,i,1:1000],Gp.K2[j,i,1:1000]) ,
+                                                                                      bandwidth=0.02,
+                                                                                      gridsize = c(500L,500L), 
+                                                                                      range.x=list(c(-0.005,1+0.005),
+                                                                                                   c(-0.005,1+0.005)),
+                                                                                      truncate=F) ) )
+kern.l2.D = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K2[j,i,1:1000],D.K2[j,i,1:1000]) ,
+                                                                                      bandwidth=0.02,
+                                                                                      gridsize = c(500L,500L), 
+                                                                                      range.x=list(c(-0.005,1+0.005),
+                                                                                                   c(-0.005,1+0.005)),
+                                                                                      truncate=F) ) )
+x1  = kern.l2[[1]][[1]]$x1
+x2  = kern.l2[[1]][[1]]$x2
+x1m = matrix(x1, nrow=length(x1), ncol=length(x1))
+x2m = matrix(x2, byrow=T, nrow=length(x2), ncol=length(x2))
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l2[[i]][[j]]$fhat[ ( sapply(x1m,Fup,K=2) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l2.Gp[[i]][[j]]$fhat[ ( sapply(x1m,Gpup,K=2) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l2.D[[i]][[j]]$fhat[ ( sapply(x1m,Dup,K=2) )<=x2m ]=0
+  }
+}
+
+K=2
+co = rev( heat.colors(100) )
+ma = max(c(unlist(kern.l2[[1]][[1]]$fhat),unlist(kern.l2[[1]][[2]]$fhat),unlist(kern.l2[[1]][[3]]$fhat),
+           unlist(kern.l2[[2]][[1]]$fhat),unlist(kern.l2[[2]][[2]]$fhat),unlist(kern.l2[[2]][[3]]$fhat),
+           unlist(kern.l2[[3]][[1]]$fhat),unlist(kern.l2[[3]][[2]]$fhat),unlist(kern.l2[[3]][[3]]$fhat) ) )
+for(i in 1:length(M.l)){
+  for(j in 1:length(th.l)){
+    svg(paste("F_M_K2_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l2[[i]][[j]]$x1,kern.l2[[i]][[j]]$x2,kern.l2[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MF2[,1],MF2[,2] )
+    lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+    points(mean(M.K2[j,i,1:1000]),mean(F.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("Gp_M_K2_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l2.Gp[[i]][[j]]$x1,kern.l2.Gp[[i]][[j]]$x2,kern.l2.Gp[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MG2[,1],MG2[,2] )
+    points(mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16 ) #mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("D_M_K2_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l2.D[[i]][[j]]$x1,kern.l2.D[[i]][[j]]$x2,kern.l2.D[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MD2[,1],MD2[,2] )
+    lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+    points(mean(M.K2[j,i,1:1000]),mean(D.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+  }
+}
+
+# legend 
+svg("Fig2_legend.svg",h=4,w=1.5)
+image(c(1,2),seq(-6,-2,length.out = 99), matrix(10**seq(-6,-2,length.out = 99),nrow=1) ,col=c(rgb(1,1,1),rev(heat.colors(80))),breaks=c(0,10**seq(-6,-2,length.out=81)),
+      xlab="",ylab="Proportion of loci",las=1,xaxt="n",yaxt="n" )
+axis(side = 4,las=1,)
+dev.off()
+
+
+# mean vals 
+co2d <- function(x,y){
+  x2 = (log(x,10)+1 )/2
+  y2 = (log(y,10)+1 )/2
+  return( rgb(y2,102/255,x2/2) )
+}
+
+MF2mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K2[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K2[i,j,1:1000])  )  ) )   )
+MG2mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K2[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(Gp.K2[i,j,1:1000])  )  ) )   )
+MD2mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K2[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(D.K2[i,j,1:1000])  )  ) )   )
+
+svg("Fig3A_raw.svg",h=2.5,w=2.5*3)
+par(mfrow=c(1,3),las=1,family="Times")
+plot(M , Fup(2,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MF2mean[i+j*3,1],MF2mean[i+j*3,2],MF2mean[i+1+j*3,1],MF2mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MF2mean[(i-1)*3+1+j,1],MF2mean[(i-1)*3+1+j,2],MF2mean[(i-1)*3+1+3+j,1],MF2mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MF2mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#Gp
+plot(M , Gpup(2,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MG2mean[i+j*3,1],MG2mean[i+j*3,2],MG2mean[i+1+j*3,1],MG2mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MG2mean[(i-1)*3+1+j,1],MG2mean[(i-1)*3+1+j,2],MG2mean[(i-1)*3+1+3+j,1],MG2mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MG2mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#D
+plot(M , Dup(2,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MD2mean[i+j*3,1],MD2mean[i+j*3,2],MD2mean[i+1+j*3,1],MD2mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MD2mean[(i-1)*3+1+j,1],MD2mean[(i-1)*3+1+j,2],MD2mean[(i-1)*3+1+3+j,1],MD2mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MD2mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+dev.off()
+
+svg("Fig3_legend.svg",h=3.5,w=3)
+par(las=1)
+plot(cbind(rep(M.l,each=3),th.l), log="xy" , pch=16 , xlab="4Nmu",ylab="4Nm", 
+     col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )  ,asp=1 )
+for(i in 1:3){
+  segments(th.l[-3],M.l[i],th.l[-1],M.l[i],col=rgb(0.7,0.7,0.7))
+  segments(th.l[i],M.l[-3],th.l[i],M.l[-1],col=rgb(0.7,0.7,0.7))
+}
+points(cbind(rep(M.l,each=3),th.l), pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+dev.off()
+
+# K=6
+nsamp = 100
+I = 1000
+ms.l.K6   <- lapply(th.l, function(thtmp) lapply(M.l, function(Mtmp) ms(nsam = nsamp*6, nreps = I, 
+                                                                        opts = paste("-t",thtmp,"-I 6",nsamp,nsamp,nsamp,nsamp,nsamp,nsamp,Mtmp)  )  ) )
+
+Gp.K6 = D.K6 = F.K6= array(0, c(3, 3, I))  #matrix(0,length(stsim),3)
+M.K6= array(0, c(3, 3, I))  #matrix(0,length(stsim),3)
+K=6
+for(tt in 1:3){ # for each mutation rate
+  print(paste("tt=",tt))
+  for(ii in 1:3){ # for each migration rate
+    print(paste("ii=",ii))
+    data  = ms.l.K6[[tt]][[ii]]
+    stsim2rm = which(grepl(pattern="segsites: 0",x=data,perl=T))
+    if( length(stsim2rm)>0)  data = data[-c(stsim2rm,stsim2rm+1)]
+    stsim = which(grepl(pattern="positions",x=data,perl=T)) +1 #index of simul start
+    for(i in 1:length(stsim)){ # for each allele
+      alleles   = as.numeric( as.factor(sapply(1:K, function(k) data[(stsim[i]+(k-1)*nsamp):(stsim[i]+k*nsamp-1)] )) )
+      fal = sapply(1:K, function(k) sapply(1:max(alleles), function(i2) mean(alleles[(1+(k-1)*nsamp):(k*nsamp)]==i2)) )
+      Hs  = 1- mean( colSums(fal**2) )
+      ft  = rowMeans(fal)
+      Ht  = 1-sum( ft**2 )
+      F.K6[tt,ii,i] = 1 - Hs/Ht
+      M.K6[tt,ii,i] = max(ft)
+      Gp.K6[tt,ii,i] = (1 - Hs/Ht)*(K-1+Hs)/(K-1)/(1-Hs)
+      D.K6[tt,ii,i] = K/(K-1)*(Ht-Hs)/(1-Hs)
+    }
+  }
+}
+
+rm(data)  
+save(ms.l.K6, file = "ms.l.K6.Rdata" )
+rm(ms.l.K6) 
+gc()
+require(KernSmooth)
+kern.l6 = lapply(1:length(M.l), function(i) lapply(1:length(th.l), 
+                                                   function(j) bkde2D(cbind(M.K6[j,i,1:1000],F.K6[j,i,1:1000]) ,
+                                                                      bandwidth=0.02,
+                                                                      gridsize = c(500L,500L), 
+                                                                      range.x=list(c(-0.005,1+0.005),
+                                                                                   c(-0.005,1+0.005)),
+                                                                      truncate=F) ) )
+kern.l6.Gp = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K6[j,i,1:1000],Gp.K6[j,i,1:1000]) ,
+                                                                                         bandwidth=0.02,
+                                                                                         gridsize = c(500L,500L), 
+                                                                                         range.x=list(c(-0.005,1+0.005),
+                                                                                                      c(-0.005,1+0.005)),
+                                                                                         truncate=F) ) )
+kern.l6.D = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K6[j,i,1:1000],D.K6[j,i,1:1000]) ,
+                                                                                        bandwidth=0.02,
+                                                                                        gridsize = c(500L,500L), 
+                                                                                        range.x=list(c(-0.005,1+0.005),
+                                                                                                     c(-0.005,1+0.005)),
+                                                                                        truncate=F) ) )
+x1  = kern.l6[[1]][[1]]$x1
+x2  = kern.l6[[1]][[1]]$x2
+x1m = matrix(x1, nrow=length(x1), ncol=length(x1))
+x2m = matrix(x2, byrow=T, nrow=length(x2), ncol=length(x2))
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l6[[i]][[j]]$fhat[ ( sapply(x1m,Fup,K=6) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l6.Gp[[i]][[j]]$fhat[ ( sapply(x1m,Gpup,K=6) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l6.D[[i]][[j]]$fhat[ ( sapply(x1m,Dup,K=6) )<=x2m ]=0
+  }
+}
+
+K=6
+co = rev( heat.colors(100) )
+ma = max(c(unlist(kern.l6[[1]][[1]]$fhat),unlist(kern.l6[[1]][[2]]$fhat),unlist(kern.l6[[1]][[3]]$fhat),
+           unlist(kern.l6[[2]][[1]]$fhat),unlist(kern.l6[[2]][[2]]$fhat),unlist(kern.l6[[2]][[3]]$fhat),
+           unlist(kern.l6[[3]][[1]]$fhat),unlist(kern.l6[[3]][[2]]$fhat),unlist(kern.l6[[3]][[3]]$fhat) ) )
+for(i in 1:length(M.l)){
+  for(j in 1:length(th.l)){
+    svg(paste("F_M_K6_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l6[[i]][[j]]$x1,kern.l6[[i]][[j]]$x2,kern.l6[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MF6[,1],MF6[,2] )
+    lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+    points(mean(M.K6[j,i,1:1000]),mean(F.K6[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("Gp_M_K6_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l6.Gp[[i]][[j]]$x1,kern.l6.Gp[[i]][[j]]$x2,kern.l6.Gp[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MG6[,1],MG6[,2] )
+    points(mean(M.K6[j,i,1:1000]),mean(Gp.K6[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16 ) #mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("D_M_K6_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l6.D[[i]][[j]]$x1,kern.l6.D[[i]][[j]]$x2,kern.l6.D[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MD6[,1],MD6[,2] )
+    lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+    points(mean(M.K6[j,i,1:1000]),mean(D.K6[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+  }
+}
+
+# mean vals 
+co2d <- function(x,y){
+  x2 = (log(x,10)+1 )/2
+  y2 = (log(y,10)+1 )/2
+  return( rgb(y2,102/255,x2/2) )
+}
+
+MF6mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K6[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K6[i,j,1:1000])  )  ) )   )
+MG6mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K6[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(Gp.K6[i,j,1:1000])  )  ) )   )
+MD6mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K6[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(D.K6[i,j,1:1000])  )  ) )   )
+
+svg("Fig3B_raw.svg",h=2.5,w=2.5*3)
+par(mfrow=c(1,3),las=1,family="Times")
+plot(M , Fup(6,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MF6mean[i+j*3,1],MF6mean[i+j*3,2],MF6mean[i+1+j*3,1],MF6mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MF6mean[(i-1)*3+1+j,1],MF6mean[(i-1)*3+1+j,2],MF6mean[(i-1)*3+1+3+j,1],MF6mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MF6mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#Gp
+plot(M , Gpup(6,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MG6mean[i+j*3,1],MG6mean[i+j*3,2],MG6mean[i+1+j*3,1],MG6mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MG6mean[(i-1)*3+1+j,1],MG6mean[(i-1)*3+1+j,2],MG6mean[(i-1)*3+1+3+j,1],MG6mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MG6mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#D
+plot(M , Dup(6,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MD6mean[i+j*3,1],MD6mean[i+j*3,2],MD6mean[i+1+j*3,1],MD6mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MD6mean[(i-1)*3+1+j,1],MD6mean[(i-1)*3+1+j,2],MD6mean[(i-1)*3+1+3+j,1],MD6mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MD6mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+dev.off()
+
+### K=40
+nsamp = 100
+I = 10
+D.K40 = Gp.K40 = F.K40= array(0, c(3, 3, I*100))  #matrix(0,length(stsim),3)
+M.K40= array(0, c(3, 3, I*100))  #matrix(0,length(stsim),3)
+for(jj in 1:100){
+  print(jj)
+  ms.l.K40   <- lapply(th.l, function(thtmp) lapply(M.l, function(Mtmp) ms(nsam = nsamp*40, nreps = I, opts = paste("-t",thtmp,"-I 40",paste(rep(nsamp,40), collapse = " "),Mtmp)  )  ) )
+  K=40
+  for(tt in 1:3){ # for each mutation rate
+    print(paste("tt=",tt))
+    for(ii in 1:3){ # for each migration rate
+      print(paste("ii=",ii))
+      data  = ms.l.K40[[tt]][[ii]]
+      stsim2rm = which(grepl(pattern="segsites: 0",x=data,perl=T))
+      if( length(stsim2rm)>0)  data = data[-c(stsim2rm,stsim2rm+1)]
+      stsim = which(grepl(pattern="positions",x=data,perl=T)) +1 #index of simul start
+      for(i in 1:length(stsim)){ # for each allele
+        alleles   = as.numeric( as.factor(sapply(1:K, function(k) data[(stsim[i]+(k-1)*nsamp):(stsim[i]+k*nsamp-1)] )) )
+        fal = sapply(1:K, function(k) sapply(1:max(alleles), function(i2) mean(alleles[(1+(k-1)*nsamp):(k*nsamp)]==i2)) )
+        Hs  = 1- mean( colSums(fal**2) )
+        ft  = rowMeans(fal)
+        Ht  = 1-sum( ft**2 )
+        F.K40[tt,ii,i+(jj-1)*I] = 1 - Hs/Ht
+        M.K40[tt,ii,i+(jj-1)*I] = max(ft)
+        Gp.K40[tt,ii,i+(jj-1)*I] = (1 - Hs/Ht)*(K-1+Hs)/(K-1)/(1-Hs)
+        D.K40[tt,ii,i+(jj-1)*I]  = K/(K-1)*(Ht-Hs)/(1-Hs)
+      }
+    }
+  }
+  #save(ms.l.K40, file = paste0("ms.l.K40.",jj,".Rdata") )
+  #rm(ms.l.K40) 
+  #rm(data)  
+  #gc()
+}
+save(F.K40, file = "F.K40.Rdata")
+save(M.K40, file = "M.K40.Rdata")
+save(Gp.K40, file = "Gp.K40.Rdata")
+save(D.K40, file = "D.K40.Rdata")
+
+require(KernSmooth)
+kern.l40 = lapply(1:length(M.l), function(i) lapply(1:length(th.l), 
+                                                    function(j) bkde2D(cbind(M.K40[j,i,1:1000],F.K40[j,i,1:1000]) ,
+                                                                       bandwidth=0.02,
+                                                                       gridsize = c(500L,500L), 
+                                                                       range.x=list(c(-0.005,1+0.005),
+                                                                                    c(-0.005,1+0.005)),
+                                                                       truncate=F) ) )
+kern.l40.Gp = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K40[j,i,1:1000],Gp.K40[j,i,1:1000]) ,
+                                                                                         bandwidth=0.02,
+                                                                                         gridsize = c(500L,500L), 
+                                                                                         range.x=list(c(-0.005,1+0.005),
+                                                                                                      c(-0.005,1+0.005)),
+                                                                                         truncate=F) ) )
+kern.l40.D = lapply(1:length(M.l), function(i) lapply(1:length(th.l), function(j) bkde2D(cbind(M.K40[j,i,1:1000],D.K40[j,i,1:1000]) ,
+                                                                                        bandwidth=0.02,
+                                                                                        gridsize = c(500L,500L), 
+                                                                                        range.x=list(c(-0.005,1+0.005),
+                                                                                                     c(-0.005,1+0.005)),
+                                                                                        truncate=F) ) )
+x1  = kern.l40[[1]][[1]]$x1
+x2  = kern.l40[[1]][[1]]$x2
+x1m = matrix(x1, nrow=length(x1), ncol=length(x1))
+x2m = matrix(x2, byrow=T, nrow=length(x2), ncol=length(x2))
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l40[[i]][[j]]$fhat[ ( sapply(x1m,Fup,K=40) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l40.Gp[[i]][[j]]$fhat[ ( sapply(x1m,Gpup,K=40) )<=x2m ]=0
+  }
+}
+for(i in 1:3){
+  for(j in 1:3){
+    kern.l40.D[[i]][[j]]$fhat[ ( sapply(x1m,Dup,K=40) )<=x2m ]=0
+  }
+}
+
+K=40
+co = rev( heat.colors(100) )
+ma = max(c(unlist(kern.l40[[1]][[1]]$fhat),unlist(kern.l40[[1]][[2]]$fhat),unlist(kern.l40[[1]][[3]]$fhat),
+           unlist(kern.l40[[2]][[1]]$fhat),unlist(kern.l40[[2]][[2]]$fhat),unlist(kern.l40[[2]][[3]]$fhat),
+           unlist(kern.l40[[3]][[1]]$fhat),unlist(kern.l40[[3]][[2]]$fhat),unlist(kern.l40[[3]][[3]]$fhat) ) )
+for(i in 1:length(M.l)){
+  for(j in 1:length(th.l)){
+    svg(paste("F_M_K40_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l40[[i]][[j]]$x1,kern.l40[[i]][[j]]$x2,kern.l40[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MF40[,1],MF40[,2] )
+    lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+    points(mean(M.K40[j,i,1:1000]),mean(F.K40[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("Gp_M_K40_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l40.Gp[[i]][[j]]$x1,kern.l40.Gp[[i]][[j]]$x2,kern.l40.Gp[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MG40[,1],MG40[,2] )
+    points(mean(M.K40[j,i,1:1000]),mean(Gp.K40[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16 ) #mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+    
+    svg(paste("D_M_K40_M",M.l[i],"th",th.l[j],".svg",sep=""),h=3.3*1,w=3*1)#,pointsize=40)
+    par(mfrow=c(1,1),family="Times")
+    plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+         xaxs="i" , yaxs="i" )
+    image(kern.l40.D[[i]][[j]]$x1,kern.l40.D[[i]][[j]]$x2,kern.l40.D[[i]][[j]]$fhat,col=co,
+          breaks=10**seq(-1,ceiling(log(ma,10)),length.out=length(co)+1) ,add=T ,useRaster = T)
+    lines(MD40[,1],MD40[,2] )
+    lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+    points(mean(M.K40[j,i,1:1000]),mean(D.K40[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+    dev.off()
+  }
+}
+
+MF40mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K40[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K40[i,j,1:1000])  )  ) )   )
+MG40mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K40[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(Gp.K40[i,j,1:1000])  )  ) )   )
+MD40mean = cbind( as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(M.K40[i,j,1:1000])  )  )), 
+                 as.numeric(sapply(1:3, function(i) sapply(1:3, function(j) mean(D.K40[i,j,1:1000])  )  ) )   )
+
+svg("Fig3C_raw.svg",h=2.5,w=2.5*3)
+par(mfrow=c(1,3),las=1,family="Times")
+plot(M , Fup(40,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MF40mean[i+j*3,1],MF40mean[i+j*3,2],MF40mean[i+1+j*3,1],MF40mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MF40mean[(i-1)*3+1+j,1],MF40mean[(i-1)*3+1+j,2],MF40mean[(i-1)*3+1+3+j,1],MF40mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MF40mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#Gp
+plot(M , Gpup(40,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MG40mean[i+j*3,1],MG40mean[i+j*3,2],MG40mean[i+1+j*3,1],MG40mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MG40mean[(i-1)*3+1+j,1],MG40mean[(i-1)*3+1+j,2],MG40mean[(i-1)*3+1+3+j,1],MG40mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MG40mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+#D
+plot(M , Dup(40,M) , xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+     xaxs="i" , yaxs="i" )
+for(i in 1:2){
+  for(j in 0:2){
+    segments(MD40mean[i+j*3,1],MD40mean[i+j*3,2],MD40mean[i+1+j*3,1],MD40mean[i+1+j*3,2],col=rgb(0.7,0.7,0.7))
+    segments(MD40mean[(i-1)*3+1+j,1],MD40mean[(i-1)*3+1+j,2],MD40mean[(i-1)*3+1+3+j,1],MD40mean[(i-1)*3+1+3+j,2],
+             col=rgb(0.7,0.7,0.7))
+  }
+}
+points(MD40mean, pch=16,col = apply(cbind(rep(M.l,each=3),th.l) , 1, function(rr) co2d(rr[1],rr[2]) )   )
+dev.off()
+
+# barplot 
+
+Fm.K2  = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K2[i,j,]) ) ) )
+Fm.K6  = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K6[i,j,]) ) ) )
+Fm.K40 = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K40[i,j,]) ) ) )
+
+Fnorm.K2  = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K2[i,j,])/mean(sapply(M.K2[i,j,],function(x) FmaxMK(K=2,M=x)),na.rm=T) ) ) )
+Fnorm.K6  = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K6[i,j,])/mean(sapply(M.K6[i,j,],function(x) FmaxMK(K=6,M=x)),na.rm=T) ) ) )
+Fnorm.K40 = t( sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K40[i,j,])/mean(sapply(M.K40[i,j,],function(x) FmaxMK(K=40,M=x)),na.rm=T) ) ) )
+
+#Fnorm.K2  = sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K2[i,j,]/sapply(M.K2[i,j,], function(x) FmaxMK(K=2,M=x)),na.rm=T) ) )
+#Fnorm.K6  = sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K6[i,j,]/sapply(M.K6[i,j,], function(x) FmaxMK(K=6,M=x)),na.rm=T) ) )
+#Fnorm.K40 = sapply(1:3, function(i) sapply(1:3, function(j) mean(F.K40[i,j,]/sapply(M.K40[i,j,],function(x) FmaxMK(K=40,M=x)),na.rm=T) ) )
+
+svg("FnormK.svg",width = 2.5*2,height = 2.5*3) # revert axes
+par(mfrow=c(3,2),las=1)
+barplot(rbind(Fm.K2[,1],Fm.K6[,1],Fm.K40[,1]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+barplot(rbind(Fnorm.K2[,1],Fnorm.K6[,1],Fnorm.K40[,1]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+
+barplot(rbind(Fm.K2[,2],Fm.K6[,2],Fm.K40[,2]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+barplot(rbind(Fnorm.K2[,2],Fnorm.K6[,2],Fnorm.K40[,2]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+
+barplot(rbind(Fm.K2[,3],Fm.K6[,3],Fm.K40[,3]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+barplot(rbind(Fnorm.K2[,3],Fnorm.K6[,3],Fnorm.K40[,3]),beside = T,names.arg = c(0.1,"1",10),ylim=c(0,1),border = NA)
+#dev.off()
+#svg("FK.svg",width = 4,height = 3*3)
+#par(mfrow=c(3,1))
+dev.off()
+
+
+
+# data application 
+toad = read_xlsx("data/Bombina variegata Microsat data.xlsx")
+
+toad.diffl = matrix(NA,10,4)
+toad.diff.pairl = c()
+for(i in 1:10){
+  tmp = toad[,(2+i*2):(3+i*2)]
+  tmp[tmp==-9] = NA
+  alleles = sort(na.exclude(unique(unlist(tmp))))
+  tmp[[1]] = factor(tmp[[1]],levels=alleles)
+  tmp[[2]] = factor(tmp[[2]],levels=alleles)
+  colnames(tmp)=c("A1","A2")
+  tmp2 = bind_cols(Population=toad[[2]],tmp) %>% pivot_longer(A1:A2)
+  Freq.Mat = table(tmp2$Population,tmp2$value)
+  Freq.Mat = sweep(Freq.Mat,1,rowSums(Freq.Mat),"/")
+  toad.diffl[i,]=Diff.M(Freq.Mat)
+  
+  for(j in 1:46){
+    for(k in 2:47){
+      toad.diff.pairl = rbind(toad.diff.pairl ,c(i,j,k,Diff.M(Freq.Mat[c(j,k),])))
+    }
+  }
+}
+
+K=47
+
+##ggplot version
+library(ggpointdensity)
+
+toad.tib = tibble(M=toad.diffl[,1],FST=toad.diffl[,2],GpST=toad.diffl[,3],D=toad.diffl[,4])
+
+
+ggbounds = function(data=toad.tib,K=47){
+  nudge = (mean(data$M)<0.5)*0.16-(mean(data$M)>=0.5)*0.25
+  MFtmp = tibble(M= seq(0,1,0.00001), FST= Fup(K,seq(0,1,0.00001)) )
+  ggplot(data,aes(x=M,y=FST)) + geom_pointdensity() + 
+  geom_point(data=tibble(M=mean(toad.diffl[,1]),FST=mean(toad.diffl[,2])),col="red",
+             pch=16,size=3,stroke=2) + 
+  geom_segment(data=tibble(M=mean(data$M),FST=mean(data$FST)), 
+               aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) + 
+  geom_label(data=tibble(M=mean(data$M),FST=mean(data$FST)),
+             aes(x=M,y=FST,
+                 label= paste0("mean FST=", format(FST,digits=2)," (",
+                               format(FST/Fup(K,M)*100,digits=2),"% of range)" )), 
+             nudge_x = nudge,col="red") +
+  geom_line(data=MFtmp,aes(x=M,y=FST)) + xlab(expression(italic(M))) +
+  ylab(expression(italic(F[ST]))) + 
+  coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) + scale_color_viridis_b() + theme_bw()
+}
+
+ggbounds(toad.tib)
+
+## base R version
+svg(paste("FigApp_toad_47.svg",sep=""),h=3.3*1,w=3*3)#,pointsize=40)
+par(mfrow=c(1,3),family="Times")
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+     xaxs="i" , yaxs="i" )
+lines(MF47[,1],MF47[,2] )
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+points(toad.diffl[,1],toad.diffl[,2],col=1,lty=2,lwd=3,pch=16)
+points(mean(toad.diffl[,1]),mean(toad.diffl[,2]),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diffl[,1]),0,mean(toad.diffl[,1]),Fup(47,mean(toad.diffl[,1])),col="red",lwd=2)
+
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+     xaxs="i" , yaxs="i" )
+lines(MG47[,1],MG47[,2] )
+points(toad.diffl[,1],toad.diffl[,3],col=1,lty=2,lwd=3,pch=16 ) #mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+points(mean(toad.diffl[,1]),mean(toad.diffl[,3]),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diffl[,1]),0,mean(toad.diffl[,1]),Gpup(47,mean(toad.diffl[,1])),col="red",lwd=2)
+
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+     xaxs="i" , yaxs="i" )
+lines(MD47[,1],MD47[,2] )
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+points(toad.diffl[,1],toad.diffl[,4],col=1,lty=2,lwd=3,pch=16)
+points(mean(toad.diffl[,1]),mean(toad.diffl[,4]),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diffl[,1]),0,mean(toad.diffl[,1]),Dup(47,mean(toad.diffl[,1])),col="red",lwd=2)
+dev.off()
+
+K=2
+svg(paste("FigApp_toad_2.svg",sep=""),h=3.3*1,w=3*3)#,pointsize=40)
+par(mfrow=c(1,3),family="Times")
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(F[ST])) , 
+     xaxs="i" , yaxs="i" )
+lines(MF2[,1],MF2[,2] )
+lines(M[M<1/K],(K-1)*M[M<1/K]/(1-M[M<1/K]) , lty=2 )
+points(toad.diff.pairl[,4],toad.diff.pairl[,5],col=rgb(0,0,0,0.1),lty=2,lwd=3,pch=16)
+points(mean(toad.diff.pairl[,4]),mean(toad.diff.pairl[,5],na.rm=T),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diff.pairl[,4]),0,mean(toad.diff.pairl[,4]),Fup(2,mean(toad.diff.pairl[,4])),col="red",lwd=2)
+
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(G[ST])) , 
+     xaxs="i" , yaxs="i" )
+lines(MG2[,1],MG2[,2] )
+points(toad.diff.pairl[,4],toad.diff.pairl[,6],col=rgb(0,0,0,0.1),lty=2,lwd=3,pch=16 ) #mean(M.K2[j,i,1:1000]),mean(Gp.K2[j,i,1:1000]),col=1,lty=2,lwd=3,pch=16)
+points(mean(toad.diff.pairl[,4]),mean(toad.diff.pairl[,6],na.rm=T),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diff.pairl[,4]),0,mean(toad.diff.pairl[,4]),Gpup(2,mean(toad.diff.pairl[,4])),col="red",lwd=2)
+
+plot(NULL,NULL, xlim=c(0,1), ylim=c(0,1),  type="l",las=1,xlab=expression(italic(M)),ylab=expression(italic(D)) , 
+     xaxs="i" , yaxs="i" )
+lines(MD2[,1],MD2[,2] )
+lines(M,1-K*M*(K*M-1)/K/(K-1) , lty=2)
+points(toad.diff.pairl[,4],toad.diff.pairl[,7],col=rgb(0,0,0,0.1),lty=2,lwd=3,pch=16)
+points(mean(toad.diff.pairl[,4]),mean(toad.diff.pairl[,7]),col=rgb(1,0,0,1),lty=2,lwd=3,pch=16,cex=2)
+segments(mean(toad.diff.pairl[,4]),0,mean(toad.diff.pairl[,4]),Dup(2,mean(toad.diff.pairl[,4])),col="red",lwd=2)
+dev.off()
+
