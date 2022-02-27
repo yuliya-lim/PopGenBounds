@@ -1,11 +1,19 @@
 Package: PopGenBounds
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Bounds on population-genetic statistics
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: 
+    person("Nicolas", "Alcala", email="alcalan@iarc.fr", role = c("aut", "cre"),comment=c(ORCID = "0000-0002-5961-5064"))
+Maintainer: Nicolas Alcala <alcalan@iarc.fr>
+Description: This package computes the range of possible values for
+    various statistics from the population genetics literature under
+    different scenarios and functions to plot data within these ranges
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
+Imports: 
+    ggplot2,
+    dplyr,
+    ggpointdensity
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
