@@ -75,29 +75,37 @@ Gpup = function(K,M){
 
 #' Plots differentiation statistics along with the maximal and minimal values of the statistic
 #'
-#' @param freqs An allele frequency matrix, where rows are populations and columns alleles
+#' @param FST Numerical vector of FST values for each locus
+#' @param M Numerical vector of frequency of the most frequent allele for each locus
+#' @param K Number of subpopulations
 #'
 #' @return A ggplot object
 #' @export
 #'
 #' @examples
-#' freqs <- matrix(c(1,0.5,0,0.5),nrow=2)
-#' data  <- Diff(freqs)
-#' ggbounds(data)
-ggbounds = function(data,K=2){
-  nudge = (mean(data$M)<0.5)*0.16-(mean(data$M)>=0.5)*0.25
-  MFtmp = tibble(M= seq(0,1,0.00001), FST= Fup(K,seq(0,1,0.00001)) )
-  ggplot(data,aes(x=M,y=FST)) + geom_pointdensity() +
-    geom_point(data=tibble(M=mean(data$M),FST=mean(data$FST)),col="red",
+#' freqs_locus1 <- matrix(c(1,0.5,0,0.5),nrow=2)
+#' freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
+#' freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
+#' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
+#' ggbounds(data[,1],data[,2])
+ggbounds = function(M,FST,K=2){
+  nudge = (mean(M)<0.5)*0.16-(mean(M)>=0.5)*0.25
+  MFtmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
+                        FST= Fup(K,seq(0.00001,1-0.00001,0.00001)) )
+  plot <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),FST=mean(FST)),col="red",
                pch=16,size=3,stroke=2) +
-    geom_segment(data=tibble(M=mean(data$M),FST=mean(data$FST)),
-                 aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) +
-    geom_label(data=tibble(M=mean(data$M),FST=mean(data$FST)),
-               aes(x=M,y=FST,
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),FST=mean(FST)),
+                          ggplot2::aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) +
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),FST=mean(FST)),
+                        ggplot2::aes(x=M,y=FST,
                    label= paste0("mean FST=", format(FST,digits=2)," (",
-                                 format(FST/Fup(K,M)*100,digits=2),"% of range)" )),
+                                 format(mean(FST)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
                nudge_x = nudge,col="red") +
-    geom_line(data=MFtmp,aes(x=M,y=FST)) + xlab(expression(italic(M))) +
-    ylab(expression(italic(F[ST]))) +
-    coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) + scale_color_viridis_b() + theme_bw()
+    ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
+    ggplot2::ylab(expression(italic(F[ST]))) +
+    ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
+    ggplot2::theme_bw()
+  if(length(M)>2) plot <- plot + ggplot2::scale_color_viridis_b()
+  return(plot)
 }

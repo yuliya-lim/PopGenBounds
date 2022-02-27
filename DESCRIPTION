@@ -6,14 +6,16 @@ Authors@R:
     person("Nicolas", "Alcala", email="alcalan@iarc.fr", role = c("aut", "cre"),comment=c(ORCID = "0000-0002-5961-5064"))
 Maintainer: Nicolas Alcala <alcalan@iarc.fr>
 Description: This package computes the range of possible values for
-    various statistics from the population genetics literature under
-    different scenarios and functions to plot data within these ranges
-License: GPL (>= 3)
+    various statistics from the population genetics literature. It considers
+    different scenarios, and provides functions to plot data within these ranges.
+License: GPL (>= 3) + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: 
-    ggplot2,
+Imports:
     dplyr,
+    ggplot2,
     ggpointdensity
+Suggests:
+    patchwork
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2

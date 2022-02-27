@@ -4,10 +4,14 @@
 \alias{ggbounds}
 \title{Plots differentiation statistics along with the maximal and minimal values of the statistic}
 \usage{
-ggbounds(freqs)
+ggbounds(M, FST, K = 2)
 }
 \arguments{
-\item{freqs}{An allele frequency matrix, where rows are populations and columns alleles}
+\item{M}{Numerical vector of frequency of the most frequent allele for each locus}
+
+\item{FST}{Numerical vector of FST values for each locus}
+
+\item{K}{Number of subpopulations}
 }
 \value{
 A ggplot object
@@ -16,6 +20,9 @@ A ggplot object
 Plots differentiation statistics along with the maximal and minimal values of the statistic
 }
 \examples{
-freqs <- matrix(c(1,0.5,0,0.5),nrow=2)
-ggbounds(freqs)
+freqs_locus1 <- matrix(c(1,0.5,0,0.5),nrow=2)
+freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
+freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
+data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
+ggbounds(data[,1],data[,2])
 }
