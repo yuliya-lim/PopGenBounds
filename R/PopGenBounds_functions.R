@@ -82,17 +82,17 @@ Gpup = function(K,M){
 #'
 #' @examples
 #' freqs <- matrix(c(1,0.5,0,0.5),nrow=2)
-#' ggbounds(freqs)
-ggbounds = function(freqs){
-  K=nrow(freqs)
-  nudge = (mean(freqs$M)<0.5)*0.16-(mean(freqs$M)>=0.5)*0.25
+#' data  <- Diff(freqs)
+#' ggbounds(data)
+ggbounds = function(data,K=2){
+  nudge = (mean(data$M)<0.5)*0.16-(mean(data$M)>=0.5)*0.25
   MFtmp = tibble(M= seq(0,1,0.00001), FST= Fup(K,seq(0,1,0.00001)) )
-  ggplot(freqs,aes(x=M,y=FST)) + geom_pointdensity() +
-    geom_point(freqs=tibble(M=mean(toad.diffl[,1]),FST=mean(toad.diffl[,2])),col="red",
+  ggplot(data,aes(x=M,y=FST)) + geom_pointdensity() +
+    geom_point(data=tibble(M=mean(data$M),FST=mean(data$FST)),col="red",
                pch=16,size=3,stroke=2) +
-    geom_segment(freqs=tibble(M=mean(freqs$M),FST=mean(freqs$FST)),
+    geom_segment(data=tibble(M=mean(data$M),FST=mean(data$FST)),
                  aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) +
-    geom_label(freqs=tibble(M=mean(freqs$M),FST=mean(freqs$FST)),
+    geom_label(data=tibble(M=mean(data$M),FST=mean(data$FST)),
                aes(x=M,y=FST,
                    label= paste0("mean FST=", format(FST,digits=2)," (",
                                  format(FST/Fup(K,M)*100,digits=2),"% of range)" )),
