@@ -101,7 +101,7 @@ Gpup = function(K,M){
 #' freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
 #' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
 #' ggbounds(data[,1],data[,2])
-ggbounds = function(M,FST,K=2){
+ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
   nudge = (mean(M)<0.5)*0.16-(mean(M)>=0.5)*0.25
   MFtmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
                         FST= Fup(K,seq(0.00001,1-0.00001,0.00001)) )
@@ -109,7 +109,8 @@ ggbounds = function(M,FST,K=2){
                         GpST= Gpup(K,seq(0.00001,1-0.00001,0.00001)) )
   MDtmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
                         D= Dup(K,seq(0.00001,1-0.00001,0.00001)) )
-  plot <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
+  plotFST <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
+    ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
     ggplot2::geom_point(data=dplyr::tibble(M=mean(M),FST=mean(FST)),col="red",
                pch=16,size=3,stroke=2) +
     ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),FST=mean(FST)),
@@ -119,13 +120,46 @@ ggbounds = function(M,FST,K=2){
                    label= paste0("mean FST=", format(FST,digits=2)," (",
                                  format(mean(FST)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
                nudge_x = nudge,col="red") +
-    ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
     ggplot2::ylab(expression(italic(F[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
   
+  if(!is.null(GpST)){
+    plotGpST <- ggplot2::ggplot(dplyr::tibble(M=M,GpST=GpST),ggplot2::aes(x=M,y=GpST)) + ggpointdensity::geom_pointdensity() +
+      ggplot2::geom_line(data=MGptmp,ggplot2::aes(x=M,y=GpST)) + ggplot2::xlab(expression(italic(M))) +
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),col="red",
+                        pch=16,size=3,stroke=2) +
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),
+                          ggplot2::aes(x=M,xend=M,y=0,yend=Gpup(K,M)), col="red",size=1 ) +
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),
+                        ggplot2::aes(x=M,y=GpST,
+                                     label= paste0("mean GpST=", format(GpST,digits=2)," (",
+                                                   format(mean(GpST)/Gpup(K,mean(M))*100,digits=2),"% of range)" )),
+                        nudge_x = nudge,col="red") +
+    ggplot2::ylab(expression(italic(G[ST]))) +
+    ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
+    ggplot2::theme_bw()
+  }else{plotGpST = NULL}
+  
+  if(!is.null(D)){
+  plotD <- ggplot2::ggplot(dplyr::tibble(M=M,D=D),ggplot2::aes(x=M,y=D)) + ggpointdensity::geom_pointdensity() +
+    ggplot2::geom_line(data=MDtmp,ggplot2::aes(x=M,y=D)) + ggplot2::xlab(expression(italic(M))) +
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),D=mean(D)),col="red",
+                        pch=16,size=3,stroke=2) +
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),D=mean(D)),
+                          ggplot2::aes(x=M,xend=M,y=0,yend=Dup(K,M)), col="red",size=1 ) +
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),D=mean(D)),
+                        ggplot2::aes(x=M,y=D,
+                                     label= paste0("mean D=", format(D,digits=2)," (",
+                                                   format(mean(D)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
+                        nudge_x = nudge,col="red") +
+    ggplot2::ylab(expression(italic(D))) +
+    ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
+    ggplot2::theme_bw()
+  }else{plotD=NULL}
+  
   if(length(M)>2) plot <- plot + ggplot2::scale_color_viridis_b()
-  return(plot)
+  return(list(plotFST,plotGpST,plotD) )
 }
 
 #' Plots differentiation statistics along with the maximal and minimal values of the statistic
