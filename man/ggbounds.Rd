@@ -11,6 +11,10 @@ ggbounds(M, FST, GpST = NULL, D = NULL, K = 2)
 
 \item{FST}{Numerical vector of FST values for each locus}
 
+\item{GpST}{Numerical vector of G prime ST values for each locus}
+
+\item{D}{Numerical vector of D values for each locus}
+
 \item{K}{Number of subpopulations}
 }
 \value{
@@ -20,9 +24,10 @@ A ggplot object
 Plots differentiation statistics along with the maximal and minimal values of the statistic
 }
 \examples{
+library(tidyverse)
 freqs_locus1 <- matrix(c(1,0.5,0,0.5),nrow=2)
 freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
 freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
 data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
-ggbounds(data[,1],data[,2])
+ggbounds(M=data \%>\% filter(statistic=="M") \%>\% pull(value),FST=data \%>\% filter(statistic=="FST") \%>\% pull(value))
 }

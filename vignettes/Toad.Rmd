@@ -1,0 +1,75 @@
+---
+title: "Toad"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Toad}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette shows an example analysis of yellow toad microsatellite data from Pohele et al. 2021, used to produce figure 6 from Alcala et al., In prep.
+
+```{r setup}
+library(PopGenBounds)
+library(tidyverse)
+library(patchwork)
+```
+
+We load the dataset
+```{r}
+Toad_microsat_freq = PopGenBounds::Toad_microsat_freq
+```
+
+# Plotting the allele frequency tables
+```{r}
+ggfreqtable(Toad_microsat_freq[[1]])
+```
+
+# Computing the statistics
+For all subpopulations together (K=47)
+```{r}
+Diff_toad = lapply(Toad_microsat_freq,Diff)
+```
+
+For pairs of subpopulations (K=2)
+```{r}
+Diff_toad_pairs = lapply(Toad_microsat_freq,function(f){sapply(1:46, function(i){ sapply((i+1):47, function(j) Diff(f[c(i,j),])$value)})} )
+```
+
+
+# Plotting the data
+For K=47
+```{r}
+toad.tib = tibble(M=unlist( sapply(Diff_toad,function(x){x[1,2]})),
+                  FST=unlist( sapply(Diff_toad,function(x){x[2,2]})),
+                  GpST=unlist( sapply(Diff_toad,function(x){x[3,2]})),
+                  D=unlist( sapply(Diff_toad,function(x){x[4,2]})))
+
+ggtoad = ggbounds(M=toad.tib$M,FST=toad.tib$FST,GpST=toad.tib$GpST,D=toad.tib$D,K=47)
+
+ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]]
+
+#ggsave(filename = "Fig_toad_K47.svg",ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]],height = 3,width=3*3)
+```
+
+For K=2
+
+```{r}
+toad.tib_pairs = tibble(M=as.numeric(sapply(Diff_toad_pairs, function(x) unlist(sapply(x,function(y){y[1,]})))),
+                  FST=as.numeric(sapply(Diff_toad_pairs, function(x) unlist(sapply(x,function(y){y[2,]})))),
+                  GpST=as.numeric(sapply(Diff_toad_pairs, function(x) unlist(sapply(x,function(y){y[3,]})))),
+                  D=as.numeric(sapply(Diff_toad_pairs, function(x) unlist(sapply(x,function(y){y[4,]})))) )
+
+ggtoad_pairs = ggbounds(M=toad.tib_pairs$M,FST=toad.tib_pairs$FST,GpST=toad.tib_pairs$GpST,D=toad.tib_pairs$D,K=2)
+
+ggtoad_pairs[[1]] + ggtoad_pairs[[2]] + ggtoad_pairs[[3]]
+
+#ggsave(filename = "Fig_toad_K47.svg",ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]],height = 3,width=3*3)
+```

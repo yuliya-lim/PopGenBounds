@@ -14,9 +14,13 @@ LazyData: true
 Imports:
     dplyr,
     ggplot2,
-    ggpointdensity
+    ggpointdensity,
+    tidyverse,
+    magrittr
 Suggests:
-    patchwork
+    knitr,
+    patchwork,
+    rmarkdown
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
