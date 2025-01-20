@@ -4,7 +4,7 @@
 \alias{ggbounds}
 \title{Plots differentiation statistics along with the maximal and minimal values of the statistic}
 \usage{
-ggbounds(M, FST, K = 2)
+ggbounds(M, FST, GpST = NULL, D = NULL, K = 2)
 }
 \arguments{
 \item{M}{Numerical vector of frequency of the most frequent allele for each locus}

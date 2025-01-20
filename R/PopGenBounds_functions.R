@@ -103,12 +103,12 @@ Gpup = function(K,M){
 #' ggbounds(data[,1],data[,2])
 ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
   nudge = (mean(M)<0.5)*0.16-(mean(M)>=0.5)*0.25
-  MFtmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
-                        FST= Fup(K,seq(0.00001,1-0.00001,0.00001)) )
-  MGptmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
-                        GpST= Gpup(K,seq(0.00001,1-0.00001,0.00001)) )
-  MDtmp = dplyr::tibble(M= seq(0.00001,1-0.00001,0.00001),
-                        D= Dup(K,seq(0.00001,1-0.00001,0.00001)) )
+  MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
+                        FST= Fup(K,seq(0.001,1-0.001,0.001)) )
+  MGptmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
+                        GpST= Gpup(K,seq(0.001,1-0.001,0.001)) )
+  MDtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
+                        D= Dup(K,seq(0.001,1-0.001,0.001)) )
   plotFST <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
     ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
     ggplot2::geom_point(data=dplyr::tibble(M=mean(M),FST=mean(FST)),col="red",
@@ -151,7 +151,7 @@ ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
     ggplot2::geom_label(data=dplyr::tibble(M=mean(M),D=mean(D)),
                         ggplot2::aes(x=M,y=D,
                                      label= paste0("mean D=", format(D,digits=2)," (",
-                                                   format(mean(D)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
+                                                   format(mean(D)/Dup(K,mean(M))*100,digits=2),"% of range)" )),
                         nudge_x = nudge,col="red") +
     ggplot2::ylab(expression(italic(D))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
