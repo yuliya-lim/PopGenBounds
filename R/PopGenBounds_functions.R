@@ -124,7 +124,7 @@ ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
                         ggplot2::aes(x=M,y=FST,
                    label= paste0("mean FST=", format(FST,digits=2)," (",
                                  format(mean(FST)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
-               nudge_x = nudge,col="red") +
+               nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(F[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
@@ -140,7 +140,7 @@ ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
                         ggplot2::aes(x=M,y=GpST,
                                      label= paste0("mean GpST=", format(GpST,digits=2)," (",
                                                    format(mean(GpST)/Gpup(K,mean(M))*100,digits=2),"% of range)" )),
-                        nudge_x = nudge,col="red") +
+                        nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(G[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
@@ -157,7 +157,7 @@ ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
                         ggplot2::aes(x=M,y=D,
                                      label= paste0("mean D=", format(D,digits=2)," (",
                                                    format(mean(D)/Dup(K,mean(M))*100,digits=2),"% of range)" )),
-                        nudge_x = nudge,col="red") +
+                        nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(D))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
