@@ -58,6 +58,7 @@ plot_stats <- function(Diff_loci, K=2, title="") {
 #' @examples
 #' library(patchwork)
 #' library(glue)
+#' library(tibble)
 #' # Initialise allele frequencies for 3 subpopulations in 2 loci
 #' locus1 <- matrix(c(0.8, 0.2,   # Subpop 1
 #'                    0.6, 0.4,   # Subpop 2

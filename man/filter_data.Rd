@@ -11,7 +11,7 @@ filter_data(df, K = 2, filter_fixed = T)
 
 \item{K}{Number of subpopulations, K=2 by default}
 
-\item{filter_fixed}{bool value, defined whether to filter out loci with 0 frequencies in both subpopulations}
+\item{filter_fixed}{bool value, defines whether to filter out loci with 0 frequencies in both subpopulations}
 }
 \value{
 A cleaned dataframe for further pipeline
