@@ -64,6 +64,7 @@ compute_mean_stats <- function(Diff_loci, K){
 #' @param data_frame_list A list of dataframes containing allele fraquencies for loci (rows)
 #' in multiple subpopulations (columns)
 #' @param K Number of subpopulations
+#' @param sample_names List of strings containing names of samples to include in the computation.
 #'
 #' @returns A list of named lists containing six numeric values:
 #' \describe{
@@ -76,22 +77,31 @@ compute_mean_stats <- function(Diff_loci, K){
 #' } for a provided list of samples
 #'
 #' @export
-get_mean_stats <- function(data_frame_list, K=2){
+get_mean_stats <- function(data_frame_list, sample_names, K=2){
   mean_stats_list <- list()
   for (df in data_frame_list) {
+    # Extract the sample name from the 3rd column name
+    sample <- sub(".*\\.", "", colnames(df)[3])
+
+    # Skip the iteration if sample not in the provided list
+    if (!(sample %in% sample_names)){
+      next
+    }
+
     subpop_names <- sub(".*\\.", "", colnames(df)[3:(2+K)])
-    sample <- subpop_names[[1]]
     data_clean <- filter_data(df, K)
     list_freq <- make_popgen_input(data_clean[,3:(2+K)])
+
     if (K==2){
       Diff_loci <- lapply(list_freq, Diff)
       mean_stats <- compute_mean_stats(Diff_loci, K)
     }
+
     else if (K==3){
-      print("Computing Diff for all pairs of subpopulations")
       D_loci = compute_Diff_3subpop(list_freq)
       mean_stats <- compute_mean_stats(D_loci$D_123, K)
     }
+
     mean_stats_list[[sample]] <- mean_stats
   }
   return(mean_stats_list)

@@ -4,11 +4,13 @@
 \alias{get_mean_stats}
 \title{Computes mean and normalized mean values of FST, G'ST, D for a list of samples.}
 \usage{
-get_mean_stats(data_frame_list, K = 2)
+get_mean_stats(data_frame_list, sample_names, K = 2)
 }
 \arguments{
 \item{data_frame_list}{A list of dataframes containing allele fraquencies for loci (rows)
 in multiple subpopulations (columns)}
+
+\item{sample_names}{List of strings containing names of samples to include in the computation.}
 
 \item{K}{Number of subpopulations}
 }

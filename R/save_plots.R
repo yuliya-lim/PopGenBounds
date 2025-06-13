@@ -5,12 +5,13 @@
 #' or allele frequencies (type = "freqs")
 #' @param K Number of subpopulations.
 #' @param subpop_names A string vector of subpopulations names to plot.
+#' @param output_folder An output directory in str.
 #'
 #' @returns None
 #' @export
 #'
-save_plots <- function(subpop_names, combined_plot, type="stats", K=2) {
-  output_folder <- "../../plots/"
+save_plots <- function(subpop_names, combined_plot, output_folder, type="stats", K=2) {
+  #output_folder <- "../../plots/"
   if (K == 2) {
     pop1 <- subpop_names[1]
     pop2 <- subpop_names[2]

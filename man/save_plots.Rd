@@ -4,12 +4,14 @@
 \alias{save_plots}
 \title{Save to file plots of differentiation statistics or of allele frequency.}
 \usage{
-save_plots(subpop_names, combined_plot, type = "stats", K = 2)
+save_plots(subpop_names, combined_plot, output_folder, type = "stats", K = 2)
 }
 \arguments{
 \item{subpop_names}{A string vector of subpopulations names to plot.}
 
 \item{combined_plot}{A ggplot object to plot.}
+
+\item{output_folder}{An output directory in str.}
 
 \item{type}{A type of the plot: differentiation statistics (type = "stats"),
 or allele frequencies (type = "freqs")}
