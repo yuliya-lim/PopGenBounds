@@ -39,3 +39,25 @@ turn_diff_in_tibble <- function(Diff_loci){
 
   return(diff.tib_clean)
 }
+
+#' Swap two columns in a dataframe without changing other columns
+#'
+#' @param df A dataframe with at least two columns.
+#' @param col1 Name of the first columns to swap.
+#' @param col2 Name of the second column to swap.
+#'
+#' @returns A datafrme with swaped columns.
+#' @export
+#'
+#' @examples
+#' # Create a sample data frame
+#' df <- data.frame(A = 1:3, B = 4:6, C = 7:9)
+#' # Swap columns B and C
+#' swapped_df <- swap_columns(df, "B", "C")
+swap_columns <- function(df, col1, col2) {
+  cols <- colnames(df)
+  idx1 <- which(cols == col1)
+  idx2 <- which(cols == col2)
+  cols[c(idx1, idx2)] <- cols[c(idx2, idx1)]
+  df[, cols]
+}
