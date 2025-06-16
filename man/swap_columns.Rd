@@ -14,7 +14,7 @@ swap_columns(df, col1, col2)
 \item{col2}{Name of the second column to swap.}
 }
 \value{
-A datafrme with swaped columns.
+A datafrme with specified two columns swapped.
 }
 \description{
 Swap two columns in a dataframe without changing other columns

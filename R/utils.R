@@ -46,7 +46,7 @@ turn_diff_in_tibble <- function(Diff_loci){
 #' @param col1 Name of the first columns to swap.
 #' @param col2 Name of the second column to swap.
 #'
-#' @returns A datafrme with swaped columns.
+#' @returns A datafrme with specified two columns swapped.
 #' @export
 #'
 #' @examples
