@@ -5,7 +5,7 @@
 #' or allele frequencies (type = "freqs")
 #' @param K Number of subpopulations.
 #' @param subpop_names A string vector of subpopulations names to plot.
-#' @param output_folder An output directory in str.
+#' @param output_folder An output directory in str format.
 #'
 #' @returns None
 #' @export

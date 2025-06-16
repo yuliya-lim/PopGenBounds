@@ -11,7 +11,7 @@ save_plots(subpop_names, combined_plot, output_folder, type = "stats", K = 2)
 
 \item{combined_plot}{A ggplot object to plot.}
 
-\item{output_folder}{An output directory in str.}
+\item{output_folder}{An output directory in str format.}
 
 \item{type}{A type of the plot: differentiation statistics (type = "stats"),
 or allele frequencies (type = "freqs")}

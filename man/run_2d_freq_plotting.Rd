@@ -4,13 +4,15 @@
 \alias{run_2d_freq_plotting}
 \title{Run a pipeline for plotting pair-wise allele frequencies of subpopulations for a list of samples}
 \usage{
-run_2d_freq_plotting(data_frame_list, K = 2)
+run_2d_freq_plotting(data_frame_list, K = 2, output_folder)
 }
 \arguments{
 \item{data_frame_list}{A list of dataframes containing allele fraquencies for loci (rows)
 in multiple subpopulations (columns)}
 
 \item{K}{Number of subpopulations}
+
+\item{output_folder}{An output directory in str format.}
 }
 \description{
 Run a pipeline for plotting pair-wise allele frequencies of subpopulations for a list of samples

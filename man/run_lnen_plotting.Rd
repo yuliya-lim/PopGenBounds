@@ -2,15 +2,17 @@
 % Please edit documentation in R/plot_stats.R
 \name{run_lnen_plotting}
 \alias{run_lnen_plotting}
-\title{Pipeline to compute distributions of differnetiation statistics for LNEN data}
+\title{Pipeline to compute distributions of differnetiation statistics for LNEN data.}
 \usage{
-run_lnen_plotting(data_frame_list, K = 2)
+run_lnen_plotting(data_frame_list, K = 2, output_folder)
 }
 \arguments{
-\item{data_frame_list}{A list of dataframes with LNEN samples}
+\item{data_frame_list}{A list of dataframes with LNEN samples.}
 
-\item{K}{Number of subpopulations. K should be the same for all samples in data_frame_list}
+\item{K}{Number of subpopulations. K should be the same for all samples in data_frame_list.}
+
+\item{output_folder}{An output directory in str format.}
 }
 \description{
-Pipeline to compute distributions of differnetiation statistics for LNEN data
+Pipeline to compute distributions of differnetiation statistics for LNEN data.
 }
