@@ -89,16 +89,17 @@ plot_stats_3subpop <- function(D_loci, subpop_names){
   return(final_plot)
 }
 
-#' Pipeline to compute distributions of differnetiation statistics for LNEN data
+#' Pipeline to compute distributions of differnetiation statistics for LNEN data.
 #'
-#' @param data_frame_list A list of dataframes with LNEN samples
-#' @param K Number of subpopulations. K should be the same for all samples in data_frame_list
+#' @param data_frame_list A list of dataframes with LNEN samples.
+#' @param K Number of subpopulations. K should be the same for all samples in data_frame_list.
+#' @param output_folder An output directory in str format.
 #'
 #' @export
-run_lnen_plotting <- function(data_frame_list, K=2) {
+run_lnen_plotting <- function(data_frame_list, K=2, output_folder) {
   for (df in data_frame_list) {
     subpop_names <- sub(".*\\.", "", colnames(df)[3:(2+K)])
-    data_clean <- filter_data(df, K)
+    data_clean <- filter_clonal(df, K)
     list_freq <- make_popgen_input(data_clean[,3:(2+K)])
     if (K==2){
       Diff_loci <- lapply(list_freq, Diff)
@@ -109,6 +110,6 @@ run_lnen_plotting <- function(data_frame_list, K=2) {
       combined_plot <- plot_stats_3subpop(D_loci, subpop_names)
       combined_plot
     }
-    save_plots(subpop_names, combined_plot, type="stats", K)
+    save_plots(subpop_names, combined_plot, output_folder, type="stats", K)
   }
 }

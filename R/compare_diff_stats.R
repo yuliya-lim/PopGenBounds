@@ -89,7 +89,7 @@ get_mean_stats <- function(data_frame_list, sample_names, K=2){
     }
 
     subpop_names <- sub(".*\\.", "", colnames(df)[3:(2+K)])
-    data_clean <- filter_data(df, K)
+    data_clean <- filter_clonal(df, K)
     list_freq <- make_popgen_input(data_clean[,3:(2+K)])
 
     if (K==2){

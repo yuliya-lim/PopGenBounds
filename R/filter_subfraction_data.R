@@ -1,3 +1,59 @@
+#' Filter data with subclonal frequencies to exclude clonal mutations
+#'
+#' @param df A dataframe with loci in rows and different metrics in columns.
+#' @param K Number of subpopulations, K=2 by default.
+#' @param filter_fixed bool value, defines whether to filter out loci with 0 frequencies in both subpopulations.
+#'
+#' @returns A dataframe containing only rows with "Clonal" = FALSE.
+#' @export
+#'
+#' @examples
+#' #' library(dplyr)
+#' # Simulated example dataset
+#' df <- tibble::tibble(
+#'   chr = c("1", "1", "1"),
+#'   pos = c(12345, 12346, 12347),
+#'   sub.frac.Sample1 = c(0.2, 0, 0.5),
+#'   sub.frac.Sample2 = c(0.3, 0, 0.5),
+#'   Clonal = c("FALSE", "TRUE", "Uncertain")
+#' )
+#' filtered_data <- filter_clonal(df, K=2)
+filter_clonal <- function(df, K=2, filter_fixed=T){
+  # Include only subclonal loci
+  data_subclonal <- subset(df, Clonal == "FALSE")
+  cat("After filtering clonal loci: ", dim(data_subclonal), "\n")
+
+  if (filter_fixed == T) {
+    # Filter loci with 0 frequency in both subclones
+    if (K == 2) {
+      data_subclonal <- data_subclonal[!(data_subclonal[[3]] == 0 & data_subclonal[[4]] == 0),]
+    }
+    else if (K == 3) {
+      data_subclonal <- data_subclonal[
+        !(data_subclonal[[3]] == 0 & data_subclonal[[4]] == 0 & data_subclonal[[5]] == 0),]
+    }
+
+    cat("After filtering loci with no mutations", dim(data_subclonal), "\n")
+
+  # Count the number of loci with fixed alleles
+  if (K == 2) {
+    cat("Loci having at least one fixed subpop", sum(data_subclonal[[3]] == 0 |
+                                                       data_subclonal[[4]] == 0),
+        "\n\n")
+  }
+
+  else if (K == 3) {
+    cat("Loci having at least one fixed subpop", sum(data_subclonal[[3]] == 0 |
+                                                       data_subclonal[[4]] == 0 |
+                                                       data_subclonal[[5]] == 0), "\n\n")
+    }
+  }
+
+  return(data_subclonal)
+}
+
+
+
 #' Filters out loci from other samples, duplicated rows, Clonal loci and loci with 0 in both subpopulations
 #'
 #' @param df A dataframe with loci in rows and different metrics in columns
@@ -19,7 +75,7 @@
 #'   Sample = c("Sample1", "Sample1", "Sample2")
 #' )
 #' filtered_data <- filter_data(df, K=2)
-filter_data <- function(df, K=2, filter_fixed=T) {
+filter_data_old <- function(df, K=2, filter_fixed=T) {
   # filter out loci form other samples
   if (K == 2){
     subpop_names <- sub(".*\\.", "", colnames(df)[3:4])
@@ -84,3 +140,4 @@ filter_data <- function(df, K=2, filter_fixed=T) {
 
   return(data_filtered)
 }
+

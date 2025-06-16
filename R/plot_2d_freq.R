@@ -54,12 +54,13 @@ plot_2d_freq <- function(df, K){
 #' @param data_frame_list A list of dataframes containing allele fraquencies for loci (rows)
 #' in multiple subpopulations (columns)
 #' @param K Number of subpopulations
+#' @param output_folder An output directory in str format.
 #'
 #' @export
-run_2d_freq_plotting <- function(data_frame_list, K=2){
+run_2d_freq_plotting <- function(data_frame_list, K=2, output_folder){
   for (df in data_frame_list) {
-    data_clean <- filter_data(df, K, filter_fixed=F)
+    data_clean <- filter_clonal(df, K, filter_fixed=F)
     freq_plot <- plot_2d_freq(data_clean, K)
-    save_plots(df, freq_plot, type="freq", K)
+    save_plots(df, freq_plot, output_folder, type="freq", K)
   }
 }
