@@ -131,37 +131,83 @@ plot_mean_stats <- function(mean_stats_list){
   # Step 1: Reshape to long format
   mean_stats_long <- mean_stats_df %>%
     select(Sample, FST_mean, GST_mean, D_mean) %>%
-    pivot_longer(cols = -Sample, names_to = "Metric", values_to = "Value")
+    pivot_longer(cols = -Sample, names_to = "Statistic", values_to = "Value")
 
   mean_norm_stats_long <- mean_stats_df %>%
     select(Sample, FST_norm_mean, GST_norm_mean, D_norm_mean) %>%
-    pivot_longer(cols = -Sample, names_to = "Metric", values_to = "Value")
+    pivot_longer(cols = -Sample, names_to = "Statistic", values_to = "Value")
 
   # Define the order of metrics as you want them in the legend
   metric_order <- c("FST_mean", "GST_mean", "D_mean")
   metric_norm_order <- c("FST_norm_mean", "GST_norm_mean", "D_norm_mean")
 
   # Set factor levels to control legend order
-  mean_stats_long$Metric <- factor(mean_stats_long$Metric, levels = metric_order)
-  mean_norm_stats_long$Metric <- factor(mean_norm_stats_long$Metric, levels = metric_norm_order)
+  mean_stats_long$Statistic <- factor(mean_stats_long$Statistic, levels = metric_order)
+  mean_norm_stats_long$Statistic <- factor(mean_norm_stats_long$Statistic, levels = metric_norm_order)
 
   # Step 2: Plot
-  g1 <- ggplot(mean_stats_long, aes(x = Sample, y = Value, color = Metric, group = Metric)) +
-    geom_point(size = 3) +
+  g1 <- ggplot(mean_stats_long, aes(x = Sample, y = Value, color = Statistic, group = Statistic)) +
+    geom_point(size = 2) +
     geom_line(size = 1) +
     theme_bw() +
-    labs(title = "Mean Diff Statistics per Sample",
-         x = "Sample", y = "Mean Value") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    labs(title = "",
+         x = "", y = "Mean Value") +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.title = element_text(face = "bold"),  # Make legend title bold
+      legend.text = element_text(size = 11)
+      ) +
+    scale_color_manual(
+      values = c(
+        "FST_mean" = "#C93842",
+        "GST_mean" = "#2678B3",
+        "D_mean" = "#65A856"
+      ),
+      labels = c(
+        expression(italic(F[ST])),
+        expression(italic(G*"'"[ST])),
+        expression(italic(D))
+      )
+    ) +
+    ggtitle("(a)")
 
-  g2 <- ggplot(mean_norm_stats_long, aes(x = Sample, y = Value, color = Metric, group = Metric)) +
-    geom_point(size = 3) +
+  g2 <- ggplot(mean_norm_stats_long, aes(x = Sample, y = Value, color = Statistic, group = Statistic)) +
+    geom_point(size = 2) +
     geom_line(size = 1) +
     theme_bw() +
-    labs(title = "Mean Normalised Diff Statistics per Sample",
-         x = "Sample", y = "Mean Value") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    labs(title = "",
+         x = "", y = "Mean Value") +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.title = element_text(face = "bold"),  # Make legend title bold
+      legend.text = element_text(size = 11)
+    ) +
+    scale_color_manual(
+      values = c(
+        "FST_norm_mean" = "#C93842",
+        "GST_norm_mean" = "#2678B3",
+        "D_norm_mean" = "#65A856"
+      ),
+      labels = c(
+        expression(italic(bar(F)[ST])),
+        expression(italic(bar(G)*"'"[ST])),
+        expression(italic(bar(D)))
+      )
+    ) +
+  ggtitle("(b)")
 
-  combined_plot <- g1 + g2
+
+  combined_plot <- (g1 + g2)
+    #plot_annotation(
+    #  tag_levels = 'a',           # Use lowercase letters
+    #  tag_prefix = '(',           # Add opening bracket
+    #  tag_suffix = ')',           # Add closing bracket
+    #  theme = theme(
+    #    plot.tag = element_text(size = 55),  # Increase font size
+    #    plot.tag.position = c(0, 1)  # x=0 (left), y=1 (top), closer to plot
+    #  )
+    #)
   return(combined_plot)
 }

@@ -12,7 +12,7 @@ Diff = function(freqs){
   if( !all(round(rowSums(freqs*100))==100) ){
     stop("Rows of freqs matrix do not sum to 1. Do rows correspond to populations and columns to alleles?")
   }
-  
+
   K = nrow(freqs)
   M = max(colMeans(freqs))
   HS = mean(1-rowSums(freqs**2))
@@ -20,14 +20,14 @@ Diff = function(freqs){
   FST = 1-HS/HT
   GpST= FST*(K-1+HS)/(K-1)/(1-HS)
   D = K/(K-1)*(HT-HS)/(1-HS)
-  
+  #warning()
   stats = tibble::tibble(statistic=c("FST","G'ST","D"), value = c(FST,GpST,D) )
-  
+
   # compute bounds
   bounds = tibble::tibble(statistic=c("FST","G'ST","D") , bound=c(Fup(K=K,M=M), Gpup(K=K,M=M), Dup(K=K,M=M) ) )
   # compute closeness to upper bound
   closeness = tibble::tibble( statistic=c("FST","G'ST","D"), bound_closeness = stats$value/bounds$bound)
-  
+
   return(dplyr::bind_rows(tibble::tibble(statistic="M",value=M),
                           dplyr::left_join(dplyr::left_join(stats,bounds,by="statistic"),closeness,by="statistic")))
 }
@@ -105,64 +105,67 @@ Gpup = function(K,M){
 #' freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
 #' freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
 #' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
-#' ggbounds(M=data %>% filter(statistic=="M") %>% pull(value),FST=data %>% filter(statistic=="FST") %>% pull(value))
+#' ggbounds(M=data %>% filter(statistic=="M") %>% pull(value),
+#'          FST=data %>% filter(statistic=="FST") %>% pull(value))
 ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
-  nudge = (mean(M)<0.5)*0.16-(mean(M)>=0.5)*0.25
+  nudge = (mean(M,na.rm=T)<0.5)*0.16-(mean(M,na.rm=T)>=0.5)*0.25
   MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         FST= Fup(K,seq(0.001,1-0.001,0.001)) )
   MGptmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         GpST= Gpup(K,seq(0.001,1-0.001,0.001)) )
   MDtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         D= Dup(K,seq(0.001,1-0.001,0.001)) )
+  # compute normalised stats
+  FST_norm <- FST / sapply(M, function(m) Fup(K, m))
   plotFST <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
     ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
-    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),FST=mean(FST)),col="red",
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),col="red",
                pch=16,size=3,stroke=2) +
-    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),FST=mean(FST)),
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),
                           ggplot2::aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) +
-    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),FST=mean(FST)),
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),
                         ggplot2::aes(x=M,y=FST,
-                   label= paste0("mean FST=", format(FST,digits=2)," (",
-                                 format(mean(FST)/Fup(K,mean(M))*100,digits=2),"% of range)" )),
+                   label= paste0("mean norm FST=", format(FST,digits=2)," (",
+                                 format(mean(FST_norm,na.rm=T)/Fup(K,mean(M,na.rm=T))*100,digits=2),"% of range)" )),
                nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(F[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
-  
+
   if(!is.null(GpST)){
     plotGpST <- ggplot2::ggplot(dplyr::tibble(M=M,GpST=GpST),ggplot2::aes(x=M,y=GpST)) + ggpointdensity::geom_pointdensity() +
       ggplot2::geom_line(data=MGptmp,ggplot2::aes(x=M,y=GpST)) + ggplot2::xlab(expression(italic(M))) +
-    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),col="red",
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M, na.rm=T),GpST=mean(GpST,na.rm=T)),col="red",
                         pch=16,size=3,stroke=2) +
-    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M,na.rm=T),GpST=mean(GpST,na.rm=T)),
                           ggplot2::aes(x=M,xend=M,y=0,yend=Gpup(K,M)), col="red",size=1 ) +
-    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),GpST=mean(GpST)),
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M,na.rm=T),GpST=mean(GpST,na.rm=T)),
                         ggplot2::aes(x=M,y=GpST,
                                      label= paste0("mean GpST=", format(GpST,digits=2)," (",
-                                                   format(mean(GpST)/Gpup(K,mean(M))*100,digits=2),"% of range)" )),
+                                                   format(mean(GpST,na.rm=T)/Gpup(K,mean(M,na.rm=T))*100,digits=2),"% of range)" )),
                         nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(G[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
   }else{plotGpST = NULL}
-  
+
   if(!is.null(D)){
   plotD <- ggplot2::ggplot(dplyr::tibble(M=M,D=D),ggplot2::aes(x=M,y=D)) + ggpointdensity::geom_pointdensity() +
     ggplot2::geom_line(data=MDtmp,ggplot2::aes(x=M,y=D)) + ggplot2::xlab(expression(italic(M))) +
-    ggplot2::geom_point(data=dplyr::tibble(M=mean(M),D=mean(D)),col="red",
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M,na.rm=T),D=mean(D,na.rm=T)),col="red",
                         pch=16,size=3,stroke=2) +
-    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M),D=mean(D)),
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M,na.rm=T),D=mean(D,na.rm=T)),
                           ggplot2::aes(x=M,xend=M,y=0,yend=Dup(K,M)), col="red",size=1 ) +
-    ggplot2::geom_label(data=dplyr::tibble(M=mean(M),D=mean(D)),
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M,na.rm=T),D=mean(D,na.rm=T)),
                         ggplot2::aes(x=M,y=D,
                                      label= paste0("mean D=", format(D,digits=2)," (",
-                                                   format(mean(D)/Dup(K,mean(M))*100,digits=2),"% of range)" )),
+                                                   format(mean(D,na.rm=T)/Dup(K,mean(M,na.rm=T))*100,digits=2),"% of range)" )),
                         nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(D))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
     ggplot2::theme_bw()
   }else{plotD=NULL}
-  
+
   if(length(M)>2) plot <- plot + ggplot2::scale_color_viridis_b()
   return(list(plotFST,plotGpST,plotD) )
 }
@@ -188,18 +191,18 @@ ggfreqtable = function(freqs){
   freqs.tmp = freqs
   if(is.null(colnames(freqs)) ) colnames(freqs.tmp) = paste0(1:ncol(freqs.tmp))
   if(is.null(rownames(freqs)) ) rownames(freqs.tmp) = paste0(1:nrow(freqs.tmp))
-  
-  freqs.long = dplyr::bind_cols(Subpopulation=rownames(freqs.tmp),dplyr::as_tibble(freqs.tmp)) %>% 
+
+  freqs.long = dplyr::bind_cols(Subpopulation=rownames(freqs.tmp),dplyr::as_tibble(freqs.tmp)) %>%
     tidyr::pivot_longer(-Subpopulation,names_to = "Allele",values_to = "Frequency")
 
   freqs.long$Allele = factor(freqs.long$Allele,levels=unique(freqs.long$Allele))
   freqs.long$Subpopulation = factor(freqs.long$Subpopulation,levels=rev(unique(freqs.long$Subpopulation)) )
 
   freqs.long$Frequency = as.numeric(format(freqs.long$Frequency,digits=2))
-  
-ggres = ggplot2::ggplot(freqs.long,ggplot2::aes(x=Allele,y=Subpopulation,fill=Frequency)) + ggplot2::geom_tile(color="black",size=0.25) + 
+
+ggres = ggplot2::ggplot(freqs.long,ggplot2::aes(x=Allele,y=Subpopulation,fill=Frequency)) + ggplot2::geom_tile(color="black",size=0.25) +
   ggplot2::geom_text(ggplot2::aes(label=Frequency))+
-  ggplot2::theme_bw() + 
+  ggplot2::theme_bw() +
   ggplot2::scale_fill_gradientn(limits=c(0,1),colors=c("white","darkorange","darkmagenta"))+
   ggplot2::theme(
     #bold font for legend text
