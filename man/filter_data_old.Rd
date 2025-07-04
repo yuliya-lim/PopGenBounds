@@ -30,5 +30,5 @@ df <- tibble::tibble(
   Clonal = c(FALSE, TRUE, FALSE),
   Sample = c("Sample1", "Sample1", "Sample2")
 )
-filtered_data <- filter_data(df, K=2)
+filtered_data <- filter_data_old(df, K=2)
 }

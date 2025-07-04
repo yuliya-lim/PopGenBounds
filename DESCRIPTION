@@ -20,6 +20,7 @@ Imports:
     tibble,
     tidyr,
     patchwork,
+    svglite,
     glue
 Suggests:
     knitr,

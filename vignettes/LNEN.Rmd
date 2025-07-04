@@ -58,19 +58,8 @@ You may optionally exclude non-mutated loci (i.e., all allele frequencies equal 
 LCNEC10 <- data_frame_list_2pop[[2]]
 PANEC1 <- data_frame_list_3pop[[1]]
 
-#LCNEC10_clean <- filter_data(LCNEC10, K=2, filter_fixed=T)
-#PANEC1_clean <- filter_data(PANEC1, K=3, filter_fixed=T)
-```
-
-
-```{r filer clonal loci}
-cat("LCNEC10 Before filtering clonal loci: ", dim(LCNEC10), "\n")
-LCNEC10_filtered <- subset(LCNEC10, Clonal == "FALSE")
-cat("LCNEC10 After filtering clonal loci: ", dim(LCNEC10_filtered), "\n\n")
-
-cat("PANEC1 before filtering clonal loci: ", dim(PANEC1), "\n")
-PANEC1_filtered <- subset(PANEC1, Clonal == "FALSE")
-cat("PANEC1 after filtering clonal loci: ", dim(PANEC1_filtered), "\n")
+LCNEC10_clean <- filter_clonal(LCNEC10, K=2, filter_fixed=T)
+PANEC1_clean <- filter_clonal(PANEC1, K=3, filter_fixed=T)
 ```
 
 ## Plot allele frequencies
@@ -117,7 +106,7 @@ PANEC1_Diff_loci$D_123[[1]]
 
 Once the differentiation statistics have been computed, we may represent them as scatter plots with \(M\) on x-axis and one of the statistics on y-axis, where each point corresponds to a locus. 
 
-```{r}
+```{r, fig.width=12}
 LCNEC10_combined_plot <- plot_stats(LCNEC10_Diff_loci, K=2, 
                                     title=glue("K=2: {LCNEC10_subpop_names[1]},{LCNEC10_subpop_names[2]}"))
 
@@ -151,11 +140,11 @@ mean_stats_list_3pop <- get_mean_stats(data_frame_list_3pop, sample_names, K=3)
 # merge samples containing 2 and 3 subpopulations
 mean_stats_merged <- c(mean_stats_list_2pop, mean_stats_list_3pop)
 
+```
+
+```{r plot mean stats}
 # plot mean values of differentiation statistics and their ranges on raw and normalised scales
 g_mean_stats <- plot_mean_stats(mean_stats_merged)
-
-```
-```{r}
 g_mean_stats
 ```
 
@@ -175,14 +164,18 @@ save_plots(PANEC1_subpop_names, PANEC1_freq_plot, output_folder, type="freq", K=
 # diff stats plots
 save_plots(LCNEC10_subpop_names, LCNEC10_combined_plot, output_folder, type="stats", K=2)
 save_plots(PANEC1_subpop_names, PANEC1_combined_plot2, output_folder, type="stats", K=3)
-
-# metrics comparison plot
-filename <- paste0(output_folder, "mean stats.svg")
-ggsave(filename,
-       plot = g_mean_stats,
-       height = 4, width = 12)
-
 ```
+
+```{r save comparison plot}
+# metrics comparison plot
+filename <- "Fig7_mean_stats3.pdf"
+
+filepath <- paste0(output_folder, filename)
+ggsave(filepath,
+       plot = g_mean_stats,
+       height = 3, width = 8)
+```
+
 
 ## Running plotting in one function  
 

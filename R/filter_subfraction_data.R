@@ -19,6 +19,7 @@
 #' )
 #' filtered_data <- filter_clonal(df, K=2)
 filter_clonal <- function(df, K=2, filter_fixed=T){
+  cat("Initial data dimension: ", dim(df), "\n")
   # Include only subclonal loci
   data_subclonal <- subset(df, Clonal == "FALSE")
   cat("After filtering clonal loci: ", dim(data_subclonal), "\n")
@@ -33,7 +34,7 @@ filter_clonal <- function(df, K=2, filter_fixed=T){
         !(data_subclonal[[3]] == 0 & data_subclonal[[4]] == 0 & data_subclonal[[5]] == 0),]
     }
 
-    cat("After filtering loci with no mutations", dim(data_subclonal), "\n")
+    cat("After filtering loci with no mutations: ", dim(data_subclonal), "\n")
 
   # Count the number of loci with fixed alleles
   if (K == 2) {
@@ -74,7 +75,7 @@ filter_clonal <- function(df, K=2, filter_fixed=T){
 #'   Clonal = c(FALSE, TRUE, FALSE),
 #'   Sample = c("Sample1", "Sample1", "Sample2")
 #' )
-#' filtered_data <- filter_data(df, K=2)
+#' filtered_data <- filter_data_old(df, K=2)
 filter_data_old <- function(df, K=2, filter_fixed=T) {
   # filter out loci form other samples
   if (K == 2){
