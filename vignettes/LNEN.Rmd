@@ -65,9 +65,9 @@ PANEC1_clean <- filter_clonal(PANEC1, K=3, filter_fixed=T)
 ## Plot allele frequencies
 To check data purity one may look at the distribution of allele frequencies for pairs of subpopulations. In the data we use, clustering of data points (?) was performed. We'll show the scatter plots of filtered data.
 ```{r plot frequencies}
-LCNEC10_freq_plot <- plot_2d_freq(LCNEC10_filtered, K=2)
+LCNEC10_freq_plot <- plot_2d_freq(LCNEC10_clean, K=2)
 
-PANEC1_freq_plot <- plot_2d_freq(PANEC1_filtered, K=3)
+PANEC1_freq_plot <- plot_2d_freq(PANEC1_clean, K=3)
 
 LCNEC10_freq_plot
 PANEC1_freq_plot
@@ -81,8 +81,8 @@ Now we need to format the data to be compatible with the input of Diff() functio
 LCNEC10_subpop_names <- sub(".*\\.", "", colnames(LCNEC10)[3:4])
 PANEC1_subpop_names <- sub(".*\\.", "", colnames(PANEC1)[3:5])
 
-LCNEC10_list_freq <- make_popgen_input(LCNEC10_filtered[,3:4])
-PANEC1_list_freq <- make_popgen_input(PANEC1_filtered[,3:5])
+LCNEC10_list_freq <- make_popgen_input(LCNEC10_clean[,3:4])
+PANEC1_list_freq <- make_popgen_input(PANEC1_clean[,3:5])
 
 # The output of make_popgen_input should be a list of matrices of allele frequencies (2 columns for biallelic loci) for all subpopulations in a sample (in rows)  
 LCNEC10_list_freq[[1]]
@@ -142,6 +142,8 @@ mean_stats_merged <- c(mean_stats_list_2pop, mean_stats_list_3pop)
 
 ```
 
+
+
 ```{r plot mean stats}
 # plot mean values of differentiation statistics and their ranges on raw and normalised scales
 g_mean_stats <- plot_mean_stats(mean_stats_merged)
@@ -168,12 +170,13 @@ save_plots(PANEC1_subpop_names, PANEC1_combined_plot2, output_folder, type="stat
 
 ```{r save comparison plot}
 # metrics comparison plot
-filename <- "Fig7_mean_stats3.pdf"
+output_folder <- "LNEN_files/"
+filename <- "Fig7_mean_stats3_oneplot_short.pdf"
 
 filepath <- paste0(output_folder, filename)
 ggsave(filepath,
        plot = g_mean_stats,
-       height = 3, width = 8)
+       height = 3.5, width = 6)
 ```
 
 

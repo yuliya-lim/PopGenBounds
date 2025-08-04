@@ -24,8 +24,8 @@ filter_clonal <- function(df, K=2, filter_fixed=T){
   data_subclonal <- subset(df, Clonal == "FALSE")
   cat("After filtering clonal loci: ", dim(data_subclonal), "\n")
 
+  # Filter loci with 0 frequency in both subclones
   if (filter_fixed == T) {
-    # Filter loci with 0 frequency in both subclones
     if (K == 2) {
       data_subclonal <- data_subclonal[!(data_subclonal[[3]] == 0 & data_subclonal[[4]] == 0),]
     }
