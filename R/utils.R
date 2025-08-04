@@ -61,3 +61,33 @@ swap_columns <- function(df, col1, col2) {
   cols[c(idx1, idx2)] <- cols[c(idx2, idx1)]
   df[, cols]
 }
+
+#' If a dataframe column consist of two columns, replaces the combined column by the two separate columns.
+#'
+#' @param data_list A list of dataframes
+#' @param idx Index of the column to replace
+#'
+#' @returns List of modified dataframes
+unparse_columns <- function(data_list, idx=3){
+  for (i in seq_along(data_list)){
+    df <- data_list[[i]]
+
+    subpop_names <- colnames(df[[3]])
+    print(subpop_names)
+
+    # Insert each subclonal fraction column with a generalized name
+    for (j in seq_along(subpop_names)) {
+      name_j <- subpop_names[j]
+      col_vector <- df$subclonal.fractions[, name_j]
+
+      # Insert at position 2 + (j - 1) to keep the new columns adjacent
+      df <- add_column(df, !!paste0("subclonal.fractions.", name_j) := col_vector, .after = 1 + j)
+    }
+
+    df$subclonal.fractions <- NULL
+
+    # Reassign back to the list
+    data_list[[i]] <- df
+  }
+  return(data_list)
+}
