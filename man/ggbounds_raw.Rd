@@ -4,7 +4,7 @@
 \alias{ggbounds_raw}
 \title{Plots differentiation statistics along with their ranges}
 \usage{
-ggbounds_raw(M, FST, GpST = NULL, D = NULL, K = 2)
+ggbounds_raw(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE)
 }
 \arguments{
 \item{M}{Numerical vector of frequency of the most frequent allele for each locus}

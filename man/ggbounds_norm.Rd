@@ -4,7 +4,7 @@
 \alias{ggbounds_norm}
 \title{Plots differentiation statistics normalized by their maximal values}
 \usage{
-ggbounds_norm(M, FST, GpST = NULL, D = NULL, K = 2)
+ggbounds_norm(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE)
 }
 \arguments{
 \item{M}{Numerical vector of frequency of the most frequent allele for each locus}

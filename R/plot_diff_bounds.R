@@ -18,7 +18,7 @@
 #' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
 #' ggbounds_raw(M=data %>% filter(statistic=="M") %>% pull(value),
 #'              FST=data %>% filter(statistic=="FST") %>% pull(value))
-ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
+ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
   nudge = (mean(M,na.rm=T)<0.5)*0.16-(mean(M,na.rm=T)>=0.5)*0.25
   MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         FST= Fup(K,seq(0.001,1-0.001,0.001)) )
@@ -31,15 +31,19 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
   mean_FST <- mean(FST, na.rm = TRUE)
 
   plotFST <-
-    ggplot(dplyr::tibble(M=M,FST=FST),aes(x = M, y = FST)) +
-    ggpointdensity::geom_pointdensity() +
-    geom_line(data = MFtmp, aes(x = M, y = FST)) +
+    ggplot(dplyr::tibble(M=M,FST=FST),aes(x = M, y = FST, color = after_stat(density / max(density)))) +
+    ggpointdensity::geom_pointdensity(size=.8) +
+    labs(color = "relative\ndensity") +
+    scale_color_viridis_c() +
+    geom_line(data = MFtmp, aes(x = M, y = FST), inherit.aes = FALSE) +
     geom_segment(data = dplyr::tibble(M = mean_M, FST = mean_FST),
-                           aes(x = M, xend = M, y = 0, yend = 1),
-                          col = "red", size = 0.8, linetype = "dashed") +
+                 aes(x = M, xend = M, y = 0, yend = 1),
+                 inherit.aes = FALSE,
+                 col = "red", size = 0.8, linetype = "dashed") +
      geom_segment(data = dplyr::tibble(M = mean_M, FST_mean = mean_FST),
-                           aes(x = 0, xend = 1, y = FST_mean, yend = FST_mean),
-                          col = "red", size = 0.8, linetype = "dashed") +
+                  aes(x = 0, xend = 1, y = FST_mean, yend = FST_mean),
+                  inherit.aes = FALSE,
+                  col = "red", size = 0.8, linetype = "dashed") +
      coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
      xlab(expression(italic(M))) +
      ylab(expression(italic(F[ST]))) +
@@ -50,15 +54,18 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
     mean_GpST <- mean(GpST, na.rm = TRUE)
 
     plotGpST <-
-       ggplot(dplyr::tibble(M=M,GpST=GpST), aes(x=M,y=GpST)) +
-      ggpointdensity::geom_pointdensity() +
-       geom_line(data=MGptmp, aes(x=M,y=GpST)) +
+       ggplot(dplyr::tibble(M=M,GpST=GpST), aes(x=M,y=GpST, color = after_stat(density / max(density)))) +
+       ggpointdensity::geom_pointdensity(size=.8) +
+       labs(color = "relative\ndensity") +
+       scale_color_viridis_c() +
+       geom_line(data=MGptmp, aes(x=M,y=GpST), inherit.aes = FALSE) +
        geom_segment(data=dplyr::tibble(M=mean_M,GpST=mean_GpST),
-                             aes(x=M,xend=M,y=0,yend=1),
-                            col="red", size=0.8,linetype = "dashed") +
+                    aes(x=M,xend=M,y=0,yend=1), inherit.aes = FALSE,
+                    col="red", size=0.8,linetype = "dashed") +
        geom_segment(data = dplyr::tibble(M = mean_M, GpST_mean = mean_GpST),
-                             aes(x = 0, xend = 1, y = GpST_mean, yend = GpST_mean),
-                            col = "red", size = 0.8, linetype = "dashed") +
+                    aes(x = 0, xend = 1, y = GpST_mean, yend = GpST_mean),
+                    inherit.aes = FALSE,
+                    col = "red", size = 0.8, linetype = "dashed") +
        coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(G[ST]))) +
@@ -70,15 +77,19 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
     mean_D <- mean(D, na.rm = TRUE)
 
     plotD <-
-       ggplot(dplyr::tibble(M=M,D=D), aes(x=M,y=D)) +
-      ggpointdensity::geom_pointdensity() +
-       geom_line(data=MDtmp, aes(x=M,y=D)) +
+       ggplot(dplyr::tibble(M=M,D=D), aes(x=M,y=D, color = after_stat(density / max(density)))) +
+       ggpointdensity::geom_pointdensity(size=.8) +
+       labs(color = "relative\ndensity") +
+       scale_color_viridis_c() +
+       geom_line(data=MDtmp, aes(x=M,y=D), inherit.aes = FALSE) +
        geom_segment(data=dplyr::tibble(M=mean_M,D=mean_D),
-                             aes(x=M,xend=M,y=0,yend=1),
-                            col="red", size=0.8,linetype = "dashed") +
+                    aes(x=M,xend=M,y=0,yend=1),
+                    inherit.aes = FALSE,
+                    col="red", size=0.8,linetype = "dashed") +
        geom_segment(data = dplyr::tibble(M = mean_M, D_mean = mean_D),
-                             aes(x = 0, xend = 1, y = D_mean, yend = D_mean),
-                            col = "red", size = 0.8, linetype = "dashed") +
+                    aes(x = 0, xend = 1, y = D_mean, yend = D_mean),
+                    inherit.aes = FALSE,
+                    col = "red", size = 0.8, linetype = "dashed") +
        coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(D))) +
@@ -86,7 +97,13 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
   }
   else{plotD=NULL}
 
-  if(length(M)>2) plot <- plot +  scale_color_viridis_b()
+  if(!show_colorbar){
+    plotFST <- plotFST + guides(color = "none")
+    plotGpST <- plotGpST + guides(color = "none")
+    plotD <- plotD + guides(color = "none")
+  }
+
+  #if(length(M)>2) plot <- plot +  scale_color_viridis_b()
   return(list(plotFST,plotGpST,plotD) )
 }
 
@@ -104,7 +121,7 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2){
 #' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
 #' ggbounds_norm(M=data %>% filter(statistic=="M") %>% pull(value),
 #'               FST=data %>% filter(statistic=="FST") %>% pull(value))
-ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2){
+ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
   nudge = (mean(M,na.rm=T)<0.75)*0.16-(mean(M,na.rm=T)>=0.75)*0.16
   MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         FST= Fup(K,seq(0.001,1-0.001,0.001)) )
@@ -120,19 +137,26 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2){
   mean_FST_n <- mean(FST_norm, na.rm=T)
 
   plotFST_norm <-
-     ggplot(MF_ST_tib,  aes(x = M, y = FST_n)) +
-    ggpointdensity::geom_pointdensity() +
+     ggplot(MF_ST_tib,  aes(x = M, y = FST_n, color = after_stat(density / max(density)))) +
+     ggpointdensity::geom_pointdensity(size = .8) +
+     labs(color = "relative\ndensity") +
+     scale_color_viridis_c() +
      geom_segment(data = dplyr::tibble(M = mean_M, FST = mean_FST_n),
-                           aes(x = M, xend = M, y = 0, yend = 1),
-                          col = "red", size = 0.8, linetype = "dashed") +
+                  aes(x = M, xend = M, y = 0, yend = 1),
+                  inherit.aes = FALSE,
+                  col = "red", size = 0.8, linetype = "dashed") +
      geom_point(data=dplyr::tibble(M=mean_M,FST_n=mean_FST_n),
-                        col="red", pch=16,size=3,stroke=2) +
-     geom_label(data=dplyr::tibble(M=mean_M,FST_n=mean_FST_n),
-                         aes(x=M,y=FST_n,
-                                     label = paste0("mean FST=",
-                                                    format(FST_n,digits=2))),
-                        nudge_x = nudge,nudge_y=0,
-                        col="red", size=3) +
+                aes(x = M, y = FST_n),
+                inherit.aes = FALSE,
+                col="red", pch=16,size=3,stroke=2) +
+     geom_label(data=dplyr::tibble(M=mean_M, FST_n=mean_FST_n),
+                aes(x=M,y=FST_n,
+                label = deparse(bquote(bar(italic(F))[ST] == .(format(mean_FST_n, digits = 2))))
+                ),
+                parse=TRUE,
+                inherit.aes = FALSE,
+                nudge_x = nudge,nudge_y=0,
+                col="red", size=2.5) +
      coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
      xlab(expression(italic(M))) +
      ylab(expression(italic(F[ST]))) +
@@ -144,19 +168,26 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2){
     mean_GST_n <- mean(GST_norm, na.rm=T)
 
     plotGpST_norm <-
-       ggplot(MG_ST_tib,  aes(x = M, y = GST_n)) +
-      ggpointdensity::geom_pointdensity() +
+       ggplot(MG_ST_tib,  aes(x = M, y = GST_n, color = after_stat(density / max(density)))) +
+       ggpointdensity::geom_pointdensity(size = .8) +
+       labs(color = "relative\ndensity") +
+       scale_color_viridis_c() +
        geom_segment(data = dplyr::tibble(M = mean_M, GST_n = mean_GST_n),
-                             aes(x = M, xend = M, y = 0, yend = 1),
-                            col = "red", size = 0.8, linetype = "dashed") +
+                    aes(x = M, xend = M, y = 0, yend = 1),
+                    inherit.aes = FALSE,
+                    col = "red", size = 0.8, linetype = "dashed") +
        geom_point(data=dplyr::tibble(M=mean_M,GST_n=mean_GST_n),
-                          col="red", pch=16,size=3,stroke=2) +
+                  aes(x = M, y = GST_n),
+                  inherit.aes = FALSE,
+                  col="red", pch=16,size=3,stroke=2) +
        geom_label(data=dplyr::tibble(M=mean_M,GST_n=mean_GST_n),
-                           aes(x=M,y=GST_n,
-                                       label = paste0("mean GpST=",
-                                                      format(GST_n,digits=2))),
-                          nudge_x = nudge,nudge_y=0,
-                          col="red", size=3) +
+                  aes(x=M,y=GST_n,
+                      label = deparse(bquote(bar(italic(G*"'"))[ST] == .(format(mean_FST_n, digits = 2)))),
+                  ),
+                  parse = TRUE,
+                  inherit.aes = FALSE,
+                  nudge_x = nudge,nudge_y=0,
+                  col="red", size=2.5) +
        coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(G[ST]))) +
@@ -172,19 +203,26 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2){
     mean_D_n <- mean(D_norm, na.rm=T)
 
     plotD_norm <-
-       ggplot(MD_tib,  aes(x = M, y = D_n)) +
-      ggpointdensity::geom_pointdensity() +
+       ggplot(MD_tib,  aes(x = M, y = D_n, color = after_stat(density / max(density)))) +
+       ggpointdensity::geom_pointdensity(size = .8) +
+       labs(color = "relative\ndensity") +
+       scale_color_viridis_c() +
        geom_segment(data = dplyr::tibble(M = mean_M, D_n = mean_D_n),
-                             aes(x = M, xend = M, y = 0, yend = 1),
-                            col = "red", size = 0.8, linetype = "dashed") +
+                    aes(x = M, xend = M, y = 0, yend = 1),
+                    inherit.aes = FALSE,
+                    col = "red", size = 0.8, linetype = "dashed") +
        geom_point(data=dplyr::tibble(M=mean_M,D_n=mean_D_n),
-                          col="red", pch=16,size=3,stroke=2) +
+                  aes(x = M, y = D_n),  # add this line
+                  inherit.aes = FALSE,
+                  col="red", pch=16,size=3,stroke=2) +
        geom_label(data=dplyr::tibble(M=mean_M,D_n=mean_D_n),
-                           aes(x=M,y=D_n,
-                                       label = paste0("mean D=",
-                                                      format(D_n,digits=2))),
-                          nudge_x = nudge,nudge_y=0,
-                          col="red", size=3) +
+                  aes(x=M,y=D_n,
+                      label = deparse(bquote(bar(italic(D)) == .(format(mean_FST_n, digits = 2)))),
+                  ),
+                  parse = TRUE,
+                  inherit.aes = FALSE,
+                  nudge_x = nudge,nudge_y=0,
+                  col="red", size=2.5) +
        coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(D))) +
@@ -194,7 +232,13 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2){
     plotD_norm=NULL
   }
 
-  if(length(M)>2) plot <- plot +  scale_color_viridis_b()
+  if(!show_colorbar){
+    plotFST_norm <- plotFST_norm + guides(color = "none")
+    plotGpST_norm <- plotGpST_norm + guides(color = "none")
+    plotD_norm <- plotD_norm + guides(color = "none")
+  }
+
+  #if(length(M)>2) plot <- plot +  scale_color_viridis_b()
   return(list(plotFST_norm,plotGpST_norm,plotD_norm) )
 }
 
