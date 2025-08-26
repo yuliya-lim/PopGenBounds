@@ -16,6 +16,8 @@ ggbounds_norm(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE)
 \item{D}{Numerical vector of D values for each locus}
 
 \item{K}{Number of subpopulations}
+
+\item{show_colorbar}{Bool, whether to show the relative density barplot}
 }
 \value{
 A list of ggplot objects

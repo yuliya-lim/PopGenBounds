@@ -5,6 +5,7 @@
 #' @param GpST Numerical vector of G prime ST values for each locus
 #' @param D Numerical vector of D values for each locus
 #' @param K Number of subpopulations
+#' @param show_colorbar Bool, whether to show the relative density barplot
 #'
 #' @returns A list of ggplot objects
 #' @import ggplot2
@@ -122,7 +123,6 @@ ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
 #' ggbounds_norm(M=data %>% filter(statistic=="M") %>% pull(value),
 #'               FST=data %>% filter(statistic=="FST") %>% pull(value))
 ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
-  nudge = (mean(M,na.rm=T)<0.75)*0.16-(mean(M,na.rm=T)>=0.75)*0.16
   MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         FST= Fup(K,seq(0.001,1-0.001,0.001)) )
   MGptmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
@@ -136,11 +136,14 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
   mean_M <- mean(M, na.rm = TRUE)
   mean_FST_n <- mean(FST_norm, na.rm=T)
 
+  nudge = (mean_FST_n<0.75)*0.16-(mean_FST_n>=0.75)*0.16
+
+
   plotFST_norm <-
      ggplot(MF_ST_tib,  aes(x = M, y = FST_n, color = after_stat(density / max(density)))) +
      ggpointdensity::geom_pointdensity(size = .8) +
      labs(color = "relative\ndensity") +
-     scale_color_viridis_c() +
+     scale_color_viridis() +
      geom_segment(data = dplyr::tibble(M = mean_M, FST = mean_FST_n),
                   aes(x = M, xend = M, y = 0, yend = 1),
                   inherit.aes = FALSE,
@@ -155,12 +158,14 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                 ),
                 parse=TRUE,
                 inherit.aes = FALSE,
-                nudge_x = nudge,nudge_y=0,
-                col="red", size=2.5) +
+                nudge_x = 0,
+                nudge_y = nudge,
+                col="red",
+                size=3.5) +
      coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
      xlab(expression(italic(M))) +
-     ylab(expression(italic(F[ST]))) +
-     theme_bw()
+     ylab(expression(italic(F[ST])))
+     #theme_bw()
 
   if(!is.null(GpST)){
     GST_norm <- GpST / sapply(M, function(m) Gpup(K, m))
@@ -171,7 +176,7 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
        ggplot(MG_ST_tib,  aes(x = M, y = GST_n, color = after_stat(density / max(density)))) +
        ggpointdensity::geom_pointdensity(size = .8) +
        labs(color = "relative\ndensity") +
-       scale_color_viridis_c() +
+       scale_color_viridis() +
        geom_segment(data = dplyr::tibble(M = mean_M, GST_n = mean_GST_n),
                     aes(x = M, xend = M, y = 0, yend = 1),
                     inherit.aes = FALSE,
@@ -186,12 +191,14 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                   ),
                   parse = TRUE,
                   inherit.aes = FALSE,
-                  nudge_x = nudge,nudge_y=0,
-                  col="red", size=2.5) +
+                  nudge_x = 0,
+                  nudge_y = nudge,
+                  col="red",
+                  size=3.5) +
        coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
-       ylab(expression(italic(G[ST]))) +
-       theme_bw()
+       ylab(expression(italic(G[ST]))) #+
+       #theme_bw()
   }
   else{
     plotGpST_norm = NULL
@@ -206,7 +213,7 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
        ggplot(MD_tib,  aes(x = M, y = D_n, color = after_stat(density / max(density)))) +
        ggpointdensity::geom_pointdensity(size = .8) +
        labs(color = "relative\ndensity") +
-       scale_color_viridis_c() +
+       scale_color_viridis(name = "Relative Density") +
        geom_segment(data = dplyr::tibble(M = mean_M, D_n = mean_D_n),
                     aes(x = M, xend = M, y = 0, yend = 1),
                     inherit.aes = FALSE,
@@ -221,8 +228,10 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                   ),
                   parse = TRUE,
                   inherit.aes = FALSE,
-                  nudge_x = nudge,nudge_y=0,
-                  col="red", size=2.5) +
+                  nudge_x = 0,
+                  nudge_y = nudge,
+                  col="red",
+                  size=3.5) +
        coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(D))) +
