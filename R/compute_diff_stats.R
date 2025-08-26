@@ -1,3 +1,24 @@
+
+#' Compute differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D}
+#' for a list of data frames of allele frequencies or subclonal fractions.
+#' The differentiation statistics are computed across all available sub-populations.
+#'
+#' @param data_subclonal A list of data frames containing allele frequencies or subclonal fractions.
+#' @param col_indices Indices of columns corresponding to frequencies in sub-populations.
+#'
+#' @return A named list containing frequency of the most frequent allele \eqn{M}, \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D}
+#'   computed for each locus in each dataset.
+#' @export
+compute_diff <- function(data_subclonal, col_indices) {
+  result <- lapply(names(data_subclonal), function(name) {
+    df <- data_subclonal[[name]]
+    list_freq <- make_popgen_input(df[, col_indices])
+    lapply(list_freq, Diff)
+  })
+  names(result) <- names(data_subclonal)
+  return(result)
+}
+
 #' Compute differentiation statistics in case of K=3 subpopulations
 #'
 #' @param list_loci A list of K × 2 matrices of allele frequencies, one per locus.
