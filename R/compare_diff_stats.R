@@ -118,14 +118,15 @@ get_mean_stats <- function(data_frame_list, sample_names, K=2){
 #'   \item{GST_norm_mean}{Mean normalized G'ST value across loci}
 #'   \item{D_norm_mean}{Mean normalized Jost's D value across loci}
 #' }
+#' @param sample_order Order for samples to be plotted
 #' Each named list corresponds to a different data sample.
 #'
 #' @returns A ggplot object
 #' @export
 #'
-plot_mean_stats_sep <- function(mean_stats_list){
+plot_mean_stats_sep <- function(mean_stats_list, sample_order){
   mean_stats_df <- bind_rows(lapply(mean_stats_list, as_tibble), .id = "Sample")
-  sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
+  #sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
   mean_stats_df$Sample <- factor(mean_stats_df$Sample, levels = sample_order)
 
   # Step 1: Reshape to long format
@@ -224,14 +225,15 @@ plot_mean_stats_sep <- function(mean_stats_list){
 #'   \item{GST_norm_mean}{Mean normalized G'ST value across loci}
 #'   \item{D_norm_mean}{Mean normalized Jost's D value across loci}
 #' }
+#' @param sample_order Order for samples to be plotted
 #' Each named list corresponds to a different data sample.
 #'
 #' @returns A ggplot object
 #' @export
 #'
-plot_mean_stats <- function(mean_stats_list){
+plot_mean_stats <- function(mean_stats_list, sample_order){
   mean_stats_df <- bind_rows(lapply(mean_stats_list, as_tibble), .id = "Sample")
-  sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
+  #sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
   mean_stats_df$Sample <- factor(mean_stats_df$Sample, levels = sample_order)
 
   # Step 1: Reshape to long format
@@ -265,12 +267,13 @@ plot_mean_stats <- function(mean_stats_list){
     geom_line(linewidth = 0.8) +
     theme_bw() +
     labs(title = "",
-         x = "Tumor sample",
-         y = "Averaged Value",
+         x = "",
+         y = "Mean Value",
          linetype = "Normalized",
          color = "Statistic") +
     theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
+      axis.text.x = element_text(angle = 45, hjust = 1, size=12, color="black"),
+      axis.text.y = element_text(size = 11),
       legend.title = element_text(face = "bold"),  # Make legend title bold
       legend.text = element_text(size = 11)
     ) +

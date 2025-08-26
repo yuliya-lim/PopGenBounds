@@ -69,10 +69,11 @@ swap_columns <- function(df, col1, col2) {
 #'
 #' @returns List of modified dataframes
 unparse_columns <- function(data_list, idx=3){
+  print("Subpopulations:")
   for (i in seq_along(data_list)){
     df <- data_list[[i]]
 
-    subpop_names <- colnames(df[[3]])
+    subpop_names <- colnames(df[[idx]])
     print(subpop_names)
 
     # Insert each subclonal fraction column with a generalized name
