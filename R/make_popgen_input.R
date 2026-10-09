@@ -1,16 +1,23 @@
-#' Produces a list of allele frequency matrices for each locus,
-#' formatted for input to the Diff() function
+#' Produces a list of allele frequency matrices for each locus, for biallelic loci.
 #'
-#' @param data_frequencies A data frame of allele frequencies with dimensions (L × K),
-#' where L is the number of loci (rows), and K is the number of subpopulations (columns)
+#' This function transforms a dataframe of allele frequencies in subpopulations for multiple loci
+#' into a list of allele frequency matrices, one per locus, compatible with the downstream computation
+#' of differentiation statistics (the `Diff()` function).
 #'
-#' @returns A list of K × 2 matrices of allele frequencies, one per locus.
-#' Each matrix contains frequencies of the reference and alternative alleles
-#' for each subpopulation.
+#' @param data_frequencies A data frame of allele frequencies with
+#'   dimensions \eqn{L \times K}, where \eqn{L} is the number of loci
+#'   (rows) and \eqn{K} is the number of sub-populations (columns).
+#'   Each entry corresponds to the frequency of the first allele for
+#'   that locus. The second allele frequency is computed as
+#'   \eqn{q = 1 - p}.
+#'
+#' @return A list of \eqn{K \times 2} matrices of allele frequencies,
+#'   one per locus. Each matrix contains the frequencies of the
+#'   reference and alternative alleles for each subpopulation.
 #' @export
 #'
 #' @examples
-#' # Create a toy dataframe of allele frequencies for 3 loci and 2 subpopulations
+#' # Create a toy dataframe of allele frequencies for 3 loci and 2 sub-populations
 #' df <- data.frame(
 #'   Subpop1 = c(0.8, 0.6, 0.4),
 #'   Subpop2 = c(0.7, 0.5, 0.3)

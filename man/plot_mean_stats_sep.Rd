@@ -4,7 +4,7 @@
 \alias{plot_mean_stats_sep}
 \title{Plots mean values of FST, G'ST and D and their normalised mean values for a given list of samples.}
 \usage{
-plot_mean_stats_sep(mean_stats_list)
+plot_mean_stats_sep(mean_stats_list, sample_order)
 }
 \arguments{
 \item{mean_stats_list}{A list of named list containing six numeric values:
@@ -15,7 +15,9 @@ plot_mean_stats_sep(mean_stats_list)
 \item{FST_norm_mean}{Mean normalized FST value across loci}
 \item{GST_norm_mean}{Mean normalized G'ST value across loci}
 \item{D_norm_mean}{Mean normalized Jost's D value across loci}
-}
+}}
+
+\item{sample_order}{Order for samples to be plotted
 Each named list corresponds to a different data sample.}
 }
 \value{

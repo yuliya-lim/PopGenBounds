@@ -2,22 +2,27 @@
 % Please edit documentation in R/compute_diff_stats.R
 \name{compute_Diff_3subpop}
 \alias{compute_Diff_3subpop}
-\title{Compute differentiation statistics in case of K=3 subpopulations}
+\title{Compute differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D} for K = 3 subpopulations.}
 \usage{
 compute_Diff_3subpop(list_loci)
 }
 \arguments{
-\item{list_loci}{A list of K × 2 matrices of allele frequencies, one per locus.
-Each matrix contains frequencies of the reference and alternative alleles (columns)
+\item{list_loci}{A list of \eqn{K \times 2} matrices of allele frequencies, one per locus.
+Each matrix contains the frequencies of the reference and alternative alleles (columns)
 for each subpopulation (rows).}
 }
 \value{
-Four lists of matrices containing differentiation statistics FST, G'ST, D and a vector of frequencies M.
-The first list corresponds to 3 subpopulations together, the remaining lists
-correspond to pair-wise differentiation statistics for each pair of subpopulations out of 3 subpopulations.
+A list of four elements:
+\itemize{
+\item The first element is a list of matrices containing differentiation statistics
+\eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D}, and a vector of frequencies \eqn{M}
+computed across all three sub-populations.
+\item The remaining three elements are lists of matrices containing pairwise differentiation
+statistics for each pair of sub-populations out of the three.
+}
 }
 \description{
-Compute differentiation statistics in case of K=3 subpopulations
+Compute differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D} for K = 3 subpopulations.
 }
 \examples{
 # Toy example with 2 loci and 3 subpopulations

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_stats.R
 \name{run_lnen_plotting}
 \alias{run_lnen_plotting}
-\title{Pipeline to compute distributions of differnetiation statistics for LNEN data.}
+\title{Pipeline to compute distributions of differentiation statistics for LNEN data.}
 \usage{
 run_lnen_plotting(data_frame_list, K = 2, output_folder)
 }
@@ -14,5 +14,5 @@ run_lnen_plotting(data_frame_list, K = 2, output_folder)
 \item{output_folder}{An output directory in str format.}
 }
 \description{
-Pipeline to compute distributions of differnetiation statistics for LNEN data.
+Pipeline to compute distributions of differentiation statistics for LNEN data.
 }

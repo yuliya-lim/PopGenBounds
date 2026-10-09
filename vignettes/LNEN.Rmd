@@ -1,6 +1,7 @@
 ---
 title: "Differentiation statistics analysis using LNENs samples"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{LNEN}
   %\VignetteEngine{knitr::rmarkdown}
@@ -23,10 +24,16 @@ library(glue)
 library(tidyr)
 library(ggplot2)
 library(svglite)
+library(tibble)
 ```
 
+## Introduction
+This vignette demonstrates the application of differentiation statistics to clinically relevant data from neuroendocrine neoplasms. The data originate from a study [@dayton2023] on 3D patient-derived organoids that model neuroendocrine tumors from multiple organs (lung, intestine, and pancreas). We provide seven datasets containing subclonal fractions measured in either two or three sub-populations, corresponding to the parental tumor and one or two organoid samples, respectively.
+
+Each dataset contains columns with subclonal fractions: columns 3–4 for datasets with two sub-populations, and columns 3–5 for datasets with three sub-populations. Additionally, each dataset includes a column named "Clonal" indicating whether a locus is clonal (TRUE) or subclonal (FALSE). The rows of the dataset correspond to individual loci.
+
 ## Load data
-(To do) Some description about where the data come from.
+
 ```{r load data}
 load("C:/Users/limy/OneDrive - International Agency for Research on Cancer/Documents/NoahCollab/code/MS_panNEN_organoids/data/Organoids_CCF_clusters_dataset_fracs_list.RData")
 
@@ -38,17 +45,10 @@ data_3pop <- unparse_columns(data_3pop)
 ```
 ## Filter data
 
-Let's choose two samples to demonstrate the package's performance: one containing 2 subpopulations \((K = 2)\), and another with 3 subpopulations \((K = 3)\).
+Let's choose two samples to demonstrate the package's performance: one containing 2 subpopulations \((K = 2)\), and another with 3 sub-populations \((K = 3)\).
 
 We will first filter the data to exclude clonal mutations (i.e., keep only subclonal mutations).  
-The data should contain one row per locus, andcolumns with:
-  - allele frequencies in tumor subpopulations,  
-  - predicted cluster,  
-  - clonality status,  
-  - and a **`Sample`** column indicating the subpopulation name (?? what is actualy there?).
-
 You may optionally exclude non-mutated loci (i.e., all allele frequencies equal to 0) using the `filter_fixed` parameter.
-
 
 ```{r filter data}
 LCNEC10 <- data_2pop[[4]]
@@ -58,18 +58,24 @@ LCNEC10_clean <- filter_clonal(LCNEC10, K=2, filter_fixed=T)
 PANEC1_clean <- filter_clonal(PANEC1, K=3, filter_fixed=T)
 ```
 To filter clonal loci on all samples
-```{r filter data}
+```{r filter data all}
 data_2pop_subclonal <- list()
 data_3pop_subclonal <- list()
 
+extract_sample_name <- function(df){
+  sample_name <- sub(".*\\.", "", colnames(df)[3])
+  sample_name <- substr(sample_name, 1, nchar(sample_name) - 1)
+  return(sample_name)
+}
+
 for (df in data_2pop){
-    sample <- sub(".*\\.", "", colnames(df)[3])
+    sample <- extract_sample_name(df)
     print(sample)
     data_2pop_subclonal[[sample]] <- filter_clonal(df, K=2)
 }
 
 for (df in data_3pop){
-    sample <- sub(".*\\.", "", colnames(df)[3])
+    sample <- extract_sample_name(df)
     print(sample)
     data_3pop_subclonal[[sample]] <- filter_clonal(df, K=3)
 }
@@ -119,10 +125,9 @@ PANEC1_Diff_loci$D_123[[1]]
 ```
 
 Loop over all samples
-```{r compute differentiation statistics for 2 subpops}
+```{r compute differentiation statistics for 2 subpops all}
 compute_diff_loci <- function(data_subclonal, col_indices) {
   result <- lapply(names(data_subclonal), function(name) {
-    print(name)
     df <- data_subclonal[[name]]
     list_freq <- make_popgen_input(df[, col_indices])
     lapply(list_freq, Diff)
@@ -165,7 +170,7 @@ PANEC1_combined_plot2 <- plot_stats_3subpop(PANEC1_Diff_loci, PANEC1_subpop_name
 
 ```{r plot mean diff stats}
 # define samples to include in the plot
-sample_names <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
+sample_names <- c("LNET6", "SINET8", "SINET9", "LNET10", "LCNEC3", "LCNEC4", "PANEC1")
 
 # compute mean values of differentiation statistics per sample
 #mean_stats_list_2pop <- get_mean_stats(data_2pop, sample_names, K=2)
@@ -192,7 +197,7 @@ mean_stats_merged <- c(mean_stats_list_2pop, mean_stats_list_3pop)
 
 ```{r plot mean stats}
 # plot mean values of differentiation statistics and their ranges on raw and normalised scales
-sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
+sample_order <- c("LNET6", "SINET8", "SINET9", "LNET10", "LCNEC3", "LCNEC4", "PANEC1")
 
 g_mean_stats <- plot_mean_stats(mean_stats_merged, sample_order)
 g_mean_stats
@@ -219,7 +224,7 @@ save_plots(PANEC1_subpop_names, PANEC1_combined_plot2, output_folder, type="stat
 ```{r save comparison plot}
 # metrics comparison plot
 output_folder <- "LNEN_files/"
-filename <- "Fig7_mean_stats3.pdf"
+filename <- "Fig8_mean_stats.pdf"
 
 filepath <- paste0(output_folder, filename)
 ggsave(filepath,
@@ -234,17 +239,17 @@ Alternatively, one can plot the differentiation statistics by calling one functi
 ```{r plot diff in pipeline}
 output_folder <- output_folder <- "LNEN_files/"
 
-run_lnen_plotting(data_frame_list_2pop, K=2, output_folder)
-run_lnen_plotting(data_frame_list_3pop, K=3, output_folder)
+#run_lnen_plotting(data_frame_list_2pop, K=2, output_folder)
+#run_lnen_plotting(data_frame_list_3pop, K=3, output_folder)
 ```
 
 Same, to plot the distributions of the allele frequencies within pairs of subpopulations, one can call run_2d_freq_plotting() function.
 ```{r plot frequncies in pipeline}
 output_folder <- output_folder <- "LNEN_files/"
 
-run_2d_freq_plotting(data_frame_list_2pop, K=2, output_folder)
-run_2d_freq_plotting(data_frame_list_3pop, K=3, output_folder)
+#run_2d_freq_plotting(data_frame_list_2pop, K=2, output_folder)
+#run_2d_freq_plotting(data_frame_list_3pop, K=3, output_folder)
 ```
 
-
+# References
 

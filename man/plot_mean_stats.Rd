@@ -2,25 +2,30 @@
 % Please edit documentation in R/compare_diff_stats.R
 \name{plot_mean_stats}
 \alias{plot_mean_stats}
-\title{Plots mean values of FST, G'ST and D and their normalised mean values for a given list of samples on one graph.}
+\title{Plot mean values of original and normalized differentiation statistics in provided samples.}
 \usage{
-plot_mean_stats(mean_stats_list)
+plot_mean_stats(mean_stats_list, sample_order)
 }
 \arguments{
-\item{mean_stats_list}{A list of named list containing six numeric values:
+\item{mean_stats_list}{A list of named lists, each corresponding to a data sample,
+containing six numeric values:
 \describe{
-\item{FST_mean}{Mean raw FST value across loci}
-\item{GST_mean}{Mean raw G'ST value across loci}
-\item{D_mean}{Mean raw Jost's D value across loci}
-\item{FST_norm_mean}{Mean normalized FST value across loci}
-\item{GST_norm_mean}{Mean normalized G'ST value across loci}
-\item{D_norm_mean}{Mean normalized Jost's D value across loci}
-}
-Each named list corresponds to a different data sample.}
+\item{FST_mean}{Mean raw \eqn{F_{ST}} value across loci}
+\item{GST_mean}{Mean raw \eqn{G'_{ST}} value across loci}
+\item{D_mean}{Mean raw Jost's \eqn{D} value across loci}
+\item{FST_norm_mean}{Mean normalized \eqn{F_{ST}} value across loci}
+\item{GST_norm_mean}{Mean normalized \eqn{G'_{ST}} value across loci}
+\item{D_norm_mean}{Mean normalized Jost's \eqn{D} value across loci}
+}}
+
+\item{sample_order}{A vector specifying the order in which samples should be plotted.}
 }
 \value{
-A ggplot object
+A \code{ggplot} object representing the comparison of
+mean values of the differentiation statistics.
 }
 \description{
-Plots mean values of FST, G'ST and D and their normalised mean values for a given list of samples on one graph.
+This function creates a single plot showing the mean values of \eqn{F_{ST}},
+\eqn{G'_{ST}}, and Jost's \eqn{D}, along with their normalized counterparts,
+for a given list of samples.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/filter_subfraction_data.R
 \name{filter_clonal}
 \alias{filter_clonal}
-\title{Filter data with subclonal frequencies to exclude clonal mutations}
+\title{Filter subclonal fractions dataframe to exclude clonal mutations.}
 \usage{
 filter_clonal(df, K = 2, filter_fixed = T)
 }
@@ -17,7 +17,7 @@ filter_clonal(df, K = 2, filter_fixed = T)
 A dataframe containing only rows with "Clonal" = FALSE.
 }
 \description{
-Filter data with subclonal frequencies to exclude clonal mutations
+Keep only subclonal mutations ("Clonal" = FALSE) and exclude loci with subfraction frequency = 0.
 }
 \examples{
 #' library(dplyr)

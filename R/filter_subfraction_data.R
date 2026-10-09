@@ -1,4 +1,6 @@
-#' Filter data with subclonal frequencies to exclude clonal mutations
+#' Filter subclonal fractions dataframe to exclude clonal mutations.
+#'
+#' Keep only subclonal mutations ("Clonal" = FALSE) and exclude loci with subfraction frequency = 0.
 #'
 #' @param df A dataframe with loci in rows and different metrics in columns.
 #' @param K Number of subpopulations, K=2 by default.

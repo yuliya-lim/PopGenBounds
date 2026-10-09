@@ -214,23 +214,27 @@ plot_mean_stats_sep <- function(mean_stats_list, sample_order){
 }
 
 
-#' Plots mean values of FST, G'ST and D and their normalised mean values for a given list of samples on one graph.
+#' Plot mean values of original and normalized differentiation statistics in provided samples.
 #'
-#' @param mean_stats_list A list of named list containing six numeric values:
-#' \describe{
-#'   \item{FST_mean}{Mean raw FST value across loci}
-#'   \item{GST_mean}{Mean raw G'ST value across loci}
-#'   \item{D_mean}{Mean raw Jost's D value across loci}
-#'   \item{FST_norm_mean}{Mean normalized FST value across loci}
-#'   \item{GST_norm_mean}{Mean normalized G'ST value across loci}
-#'   \item{D_norm_mean}{Mean normalized Jost's D value across loci}
-#' }
-#' @param sample_order Order for samples to be plotted
-#' Each named list corresponds to a different data sample.
+#' This function creates a single plot showing the mean values of \eqn{F_{ST}},
+#' \eqn{G'_{ST}}, and Jost's \eqn{D}, along with their normalized counterparts,
+#' for a given list of samples.
 #'
-#' @returns A ggplot object
+#' @param mean_stats_list A list of named lists, each corresponding to a data sample,
+#'   containing six numeric values:
+#'   \describe{
+#'     \item{FST_mean}{Mean raw \eqn{F_{ST}} value across loci}
+#'     \item{GST_mean}{Mean raw \eqn{G'_{ST}} value across loci}
+#'     \item{D_mean}{Mean raw Jost's \eqn{D} value across loci}
+#'     \item{FST_norm_mean}{Mean normalized \eqn{F_{ST}} value across loci}
+#'     \item{GST_norm_mean}{Mean normalized \eqn{G'_{ST}} value across loci}
+#'     \item{D_norm_mean}{Mean normalized Jost's \eqn{D} value across loci}
+#'   }
+#' @param sample_order A vector specifying the order in which samples should be plotted.
+#'
+#' @return A \code{ggplot} object representing the comparison of
+#' mean values of the differentiation statistics.
 #' @export
-#'
 plot_mean_stats <- function(mean_stats_list, sample_order){
   mean_stats_df <- bind_rows(lapply(mean_stats_list, as_tibble), .id = "Sample")
   #sample_order <- c("LNET6T", "SINET8M", "SINET9M", "LNET10T", "LCNEC3T", "LCNEC4T", "PANEC1T")
@@ -246,9 +250,10 @@ plot_mean_stats <- function(mean_stats_list, sample_order){
         grepl("^GST", Statistic) ~ "GST",
         grepl("^D", Statistic)   ~ "D"
       ),
+      Metric = factor(Metric, levels = c("FST", "GST", "D")),
       Normalized = grepl("norm", Statistic)
     )
-
+  print(head(mean_stats_long_combined))
   # Define the order of metrics as you want them in the legend
   #metric_order <- c("FST_mean", "GST_mean", "D_mean")
   #metric_norm_order <- c("FST_norm_mean", "GST_norm_mean", "D_norm_mean")
@@ -263,8 +268,8 @@ plot_mean_stats <- function(mean_stats_list, sample_order){
                                              color = Metric,
                                              linetype = Normalized,
                                              group = interaction(Metric, Normalized))) +
-    geom_point(size = 3) +
     geom_line(linewidth = 0.8) +
+    geom_point(size = 3) +
     theme_bw() +
     labs(title = "",
          x = "",
@@ -289,7 +294,8 @@ plot_mean_stats <- function(mean_stats_list, sample_order){
         expression(italic(D))
       )
     ) +
-    scale_linetype_manual(values = c('TRUE' = "solid", 'FALSE' = "dotted"))
+    scale_linetype_manual(values = c('YES' = "solid", 'NO' = "dotted"))
+
 
   return(g1)
 }

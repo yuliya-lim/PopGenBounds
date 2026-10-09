@@ -2,23 +2,25 @@
 % Please edit documentation in R/plot_stats.R
 \name{plot_stats}
 \alias{plot_stats}
-\title{Produces a combined plot with raw and normalized differentiation statistics}
+\title{Produces a combined plot with raw and normalized differentiation statistics for a given sample.}
 \usage{
 plot_stats(Diff_loci, K = 2, title = "")
 }
 \arguments{
-\item{Diff_loci}{A list of matrices containing values of differentiation statistics FST, G'ST, D
-and a vector of frequencies M.}
+\item{Diff_loci}{A list of matrices containing values of differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D}
+and frequency of the most frequent allele \eqn{M}.}
 
 \item{K}{Number of subpopulations}
 
 \item{title}{Title of the produced plot}
 }
 \value{
-A ggplot object
+A ggplot object consisting of six statistics distributions, the first column correspond
+to the distributions of the original values of \eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D}
+and the second column to their normalized versions.
 }
 \description{
-Produces a combined plot with raw and normalized differentiation statistics
+Produces a combined plot with raw and normalized differentiation statistics for a given sample.
 }
 \examples{
 # Example with 2 loci and 2 subpopulations

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{unparse_columns}
 \alias{unparse_columns}
-\title{If a dataframe column consist of two columns, replaces the combined column by the two separate columns.}
+\title{Transform a combined column in multiple separate columns}
 \usage{
 unparse_columns(data_list, idx = 3)
 }

@@ -1,114 +1,117 @@
-#' Plots differentiation statistics along with their ranges
+#' Plot differentiation statistics against M with their upper bounds
 #'
-#' @param M Numerical vector of frequency of the most frequent allele for each locus
-#' @param FST Numerical vector of FST values for each locus
-#' @param GpST Numerical vector of G prime ST values for each locus
-#' @param D Numerical vector of D values for each locus
-#' @param K Number of subpopulations
-#' @param show_colorbar Bool, whether to show the relative density barplot
+#' Plots per-locus values of \eqn{F_{ST}}, \eqn{G'_{ST}} and \eqn{D} against
+#' \eqn{M}, the mean frequency of the most frequent allele, together with the
+#' upper bound of each statistic for `K` populations. Dashed red lines and a
+#' red point mark the means over loci. Optionally, confidence intervals of the
+#' means are drawn, either as shaded bands or as crossed error bars.
 #'
-#' @returns A list of ggplot objects
+#' @param M Numeric vector of \eqn{M} values, one per locus.
+#' @param FST Numeric vector of \eqn{F_{ST}} values, one per locus.
+#' @param GpST Optional numeric vector of \eqn{G'_{ST}} values.
+#' @param D Optional numeric vector of Jost's \eqn{D} values.
+#' @param K Number of populations.
+#' @param show_colorbar Logical; if `TRUE`, show the colour bar for the
+#'   relative point density (only used when `density_colors = TRUE`).
+#' @param density_colors Logical; if `TRUE` (default), colour points by
+#'   relative point density, otherwise draw all points in `point_color`.
+#' @param point_color Colour of the points when `density_colors = FALSE`.
+#' @param ci Optional data frame with columns `statistic`, `value_lower` and
+#'   `value_upper`, e.g. the `mean` element of [boot_stat()]. If `NULL`
+#'   (default), no intervals are drawn.
+#' @param ci_style How to draw the intervals: `"bands"` (shaded bands across
+#'   the plot) or `"cross"` (crossed error bars centred on the intervals).
+#' @param ci_names Named character vector giving, for `M`, `FST`, `GpST` and
+#'   `D`, the label used for that quantity in the `statistic` column of `ci`.
+#'
+#' @return A list of three ggplot objects (\eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D});
+#'   an element is `NULL` if the corresponding statistic was not supplied.
 #' @import ggplot2
 #' @export
-#'
-#' @examples
-#' library(tidyverse)
-#' freqs_locus1 <- matrix(c(1,0.5,0,0.5),nrow=2)
-#' freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
-#' freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
-#' data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
-#' ggbounds_raw(M=data %>% filter(statistic=="M") %>% pull(value),
-#'              FST=data %>% filter(statistic=="FST") %>% pull(value))
-ggbounds_raw = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
-  nudge = (mean(M,na.rm=T)<0.5)*0.16-(mean(M,na.rm=T)>=0.5)*0.25
-  MFtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
-                        FST= Fup(K,seq(0.001,1-0.001,0.001)) )
-  MGptmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
-                         GpST= Gpup(K,seq(0.001,1-0.001,0.001)) )
-  MDtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
-                        D= Dup(K,seq(0.001,1-0.001,0.001)) )
-
+ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE,
+                         density_colors = TRUE, point_color = "grey30",
+                         ci = NULL, ci_style = c("bands", "cross"),
+                         ci_names = c(M = "M", FST = "FST", GpST = "G'ST", D = "D")) {
+  ci_style <- match.arg(ci_style)
+  M_grid <- seq(0.001, 0.999, 0.001)
   mean_M <- mean(M, na.rm = TRUE)
-  mean_FST <- mean(FST, na.rm = TRUE)
 
-  plotFST <-
-    ggplot(dplyr::tibble(M=M,FST=FST),aes(x = M, y = FST, color = after_stat(density / max(density)))) +
-    ggpointdensity::geom_pointdensity(size=.8) +
-    labs(color = "relative\ndensity") +
-    scale_color_viridis_c() +
-    geom_line(data = MFtmp, aes(x = M, y = FST), inherit.aes = FALSE) +
-    geom_segment(data = dplyr::tibble(M = mean_M, FST = mean_FST),
-                 aes(x = M, xend = M, y = 0, yend = 1),
-                 inherit.aes = FALSE,
-                 col = "red", size = 0.8, linetype = "dashed") +
-     geom_segment(data = dplyr::tibble(M = mean_M, FST_mean = mean_FST),
-                  aes(x = 0, xend = 1, y = FST_mean, yend = FST_mean),
-                  inherit.aes = FALSE,
-                  col = "red", size = 0.8, linetype = "dashed") +
-     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
-     xlab(expression(italic(M))) +
-     ylab(expression(italic(F[ST]))) +
-     theme_bw()
+  # ---- helpers ----------------------------------------------------
 
-
-  if(!is.null(GpST)){
-    mean_GpST <- mean(GpST, na.rm = TRUE)
-
-    plotGpST <-
-       ggplot(dplyr::tibble(M=M,GpST=GpST), aes(x=M,y=GpST, color = after_stat(density / max(density)))) +
-       ggpointdensity::geom_pointdensity(size=.8) +
-       labs(color = "relative\ndensity") +
-       scale_color_viridis_c() +
-       geom_line(data=MGptmp, aes(x=M,y=GpST), inherit.aes = FALSE) +
-       geom_segment(data=dplyr::tibble(M=mean_M,GpST=mean_GpST),
-                    aes(x=M,xend=M,y=0,yend=1), inherit.aes = FALSE,
-                    col="red", size=0.8,linetype = "dashed") +
-       geom_segment(data = dplyr::tibble(M = mean_M, GpST_mean = mean_GpST),
-                    aes(x = 0, xend = 1, y = GpST_mean, yend = GpST_mean),
-                    inherit.aes = FALSE,
-                    col = "red", size = 0.8, linetype = "dashed") +
-       coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
-       xlab(expression(italic(M))) +
-       ylab(expression(italic(G[ST]))) +
-       theme_bw()
-  }
-  else{plotGpST = NULL}
-
-  if(!is.null(D)){
-    mean_D <- mean(D, na.rm = TRUE)
-
-    plotD <-
-       ggplot(dplyr::tibble(M=M,D=D), aes(x=M,y=D, color = after_stat(density / max(density)))) +
-       ggpointdensity::geom_pointdensity(size=.8) +
-       labs(color = "relative\ndensity") +
-       scale_color_viridis_c() +
-       geom_line(data=MDtmp, aes(x=M,y=D), inherit.aes = FALSE) +
-       geom_segment(data=dplyr::tibble(M=mean_M,D=mean_D),
-                    aes(x=M,xend=M,y=0,yend=1),
-                    inherit.aes = FALSE,
-                    col="red", size=0.8,linetype = "dashed") +
-       geom_segment(data = dplyr::tibble(M = mean_M, D_mean = mean_D),
-                    aes(x = 0, xend = 1, y = D_mean, yend = D_mean),
-                    inherit.aes = FALSE,
-                    col = "red", size = 0.8, linetype = "dashed") +
-       coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +
-       xlab(expression(italic(M))) +
-       ylab(expression(italic(D))) +
-       theme_bw()
-  }
-  else{plotD=NULL}
-
-  if(!show_colorbar){
-    plotFST <- plotFST + guides(color = "none")
-    plotGpST <- plotGpST + guides(color = "none")
-    plotD <- plotD + guides(color = "none")
+  # one row of ci for a given quantity ("M", "FST", "GpST" or "D")
+  ci_row <- function(stat) {
+    r <- ci[ci$statistic == ci_names[[stat]], ]
+    if (nrow(r) != 1) warning("Expected one row in 'ci' for '", ci_names[[stat]], "'; check ci_names.")
+    r
   }
 
-  #if(length(M)>2) plot <- plot +  scale_color_viridis_b()
-  return(list(plotFST,plotGpST,plotD) )
+  # per-locus points: coloured by density, or in a single colour
+  point_layers <- function() {
+    if (density_colors) {
+      list(ggpointdensity::geom_pointdensity(aes(color = after_stat(density / max(density))), size = 0.8),
+           labs(color = "relative\ndensity"),
+           scale_color_viridis_c())
+    } else {
+      list(geom_point(size = 0.8, col = point_color))
+    }
+  }
+
+  # CI as shaded bands (drawn first, behind everything)
+  ci_bands <- function(stat) {
+    if (is.null(ci) || ci_style != "bands") return(NULL)
+    m <- ci_row("M"); s <- ci_row(stat)
+    list(annotate("rect", xmin = m$value_lower, xmax = m$value_upper, ymin = 0, ymax = 1,
+                  fill = "red", alpha = 0.15),
+         annotate("rect", xmin = 0, xmax = 1, ymin = s$value_lower, ymax = s$value_upper,
+                  fill = "red", alpha = 0.15))
+  }
+
+  # CI as crossed error bars, centred on the middle of the intervals (drawn on top)
+  ci_cross <- function(stat) {
+    if (is.null(ci) || ci_style != "cross") return(NULL)
+    m <- ci_row("M"); s <- ci_row(stat)
+    mid_x <- (m$value_lower + m$value_upper) / 2
+    mid_y <- (s$value_lower + s$value_upper) / 2
+    list(geom_errorbar(data = data.frame(x = mid_x, ymin = s$value_lower, ymax = s$value_upper),
+                       aes(x = x, ymin = ymin, ymax = ymax), inherit.aes = FALSE,
+                       width = 0.005, linewidth = 0.4, col = "black"),
+         geom_errorbar(data = data.frame(y = mid_y, xmin = m$value_lower, xmax = m$value_upper),
+                       aes(y = y, xmin = xmin, xmax = xmax), inherit.aes = FALSE,
+                       width = 0.005, linewidth = 0.4, col = "black", orientation = "y"))
+  }
+
+  # one plot: statistic y against M, with its bound function and axis label
+  make_plot <- function(y, stat, bound_fun, y_label) {
+    #mean_y <- mean(y, na.rm = TRUE)
+    mean_y <- if (is.null(ci)) mean(y, na.rm = TRUE) else ci_row(stat)$value
+    p <- ggplot(data.frame(M = M, y = y), aes(x = M, y = y)) +
+      ci_bands(stat) +
+      point_layers() +
+      geom_line(data = data.frame(M = M_grid, y = bound_fun(K, M_grid)),
+                aes(x = M, y = y), inherit.aes = FALSE) +
+      annotate("segment", x = mean_M, xend = mean_M, y = 0, yend = 1,
+               col = "red", linewidth = 0.4, linetype = "dashed") +
+      annotate("segment", x = 0, xend = 1, y = mean_y, yend = mean_y,
+               col = "red", linewidth = 0.4, linetype = "dashed") +
+      annotate("point", x = mean_M, y = mean_y, col = "red", size = 2) +
+      ci_cross(stat) +
+      coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+      xlab(expression(italic(M))) +
+      ylab(y_label) +
+      theme_bw()
+    if (!show_colorbar) p <- p + guides(color = "none")
+    p
+  }
+
+  # ---- plots ------------------------------------------------------
+  plotFST  <- make_plot(FST, "FST", Fup, expression(italic(F[ST])))
+  plotGpST <- if (!is.null(GpST)) make_plot(GpST, "GpST", Gpup, expression(italic(G*minute[ST]))) else NULL
+  plotD    <- if (!is.null(D))    make_plot(D, "D", Dup, expression(italic(D))) else NULL
+
+  list(plotFST, plotGpST, plotD)
 }
 
-#' Plots differentiation statistics normalized by their maximal values
+#' Plots differentiation statistics normalized by their maximal values at corresponding M
 #'
 #' @inheritParams ggbounds_raw
 #' @returns A list of ggplot objects
@@ -136,7 +139,7 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
   mean_M <- mean(M, na.rm = TRUE)
   mean_FST_n <- mean(FST_norm, na.rm=T)
 
-  nudge = (mean_FST_n<0.75)*0.16-(mean_FST_n>=0.75)*0.16
+  nudge = (mean_FST_n<0.65)*0.16-(mean_FST_n>=0.65)*0.16
 
 
   plotFST_norm <-
@@ -162,10 +165,10 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                 nudge_y = nudge,
                 col="red",
                 size=3.5) +
-     coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
+     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
      xlab(expression(italic(M))) +
-     ylab(expression(italic(F[ST])))
-     #theme_bw()
+     ylab(expression(italic(F[ST]))) +
+     theme_bw()
 
   if(!is.null(GpST)){
     GST_norm <- GpST / sapply(M, function(m) Gpup(K, m))
@@ -195,10 +198,10 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                   nudge_y = nudge,
                   col="red",
                   size=3.5) +
-       coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
+       coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
-       ylab(expression(italic(G[ST]))) #+
-       #theme_bw()
+       ylab(expression(italic(G[ST]))) +
+       theme_bw()
   }
   else{
     plotGpST_norm = NULL
@@ -232,7 +235,7 @@ ggbounds_norm = function(M,FST,GpST=NULL,D=NULL,K=2, show_colorbar=FALSE){
                   nudge_y = nudge,
                   col="red",
                   size=3.5) +
-       coord_cartesian(xlim = c(0.5, 1), ylim = c(0, 1), expand = F) +
+       coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = F) +
        xlab(expression(italic(M))) +
        ylab(expression(italic(D))) +
        theme_bw()

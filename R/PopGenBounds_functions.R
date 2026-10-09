@@ -29,7 +29,8 @@ Diff = function(freqs){
   closeness = tibble::tibble( statistic=c("FST","G'ST","D"), bound_closeness = stats$value/bounds$bound)
 
   return(dplyr::bind_rows(tibble::tibble(statistic="M",value=M),
-                          dplyr::left_join(dplyr::left_join(stats,bounds,by="statistic"),closeness,by="statistic")))
+                          dplyr::left_join(dplyr::left_join(stats,bounds,by="statistic"),closeness,by="statistic"),
+                          tibble::tibble(statistic=c("HS","HT"),value=c(HS,HT))))
 }
 
 
@@ -115,18 +116,16 @@ ggbounds = function(M,FST,GpST=NULL,D=NULL,K=2){
                         GpST= Gpup(K,seq(0.001,1-0.001,0.001)) )
   MDtmp = dplyr::tibble(M= seq(0.001,1-0.001,0.001),
                         D= Dup(K,seq(0.001,1-0.001,0.001)) )
-  # compute normalised stats
-  FST_norm <- FST / sapply(M, function(m) Fup(K, m))
   plotFST <- ggplot2::ggplot(dplyr::tibble(M=M,FST=FST),ggplot2::aes(x=M,y=FST)) + ggpointdensity::geom_pointdensity() +
     ggplot2::geom_line(data=MFtmp,ggplot2::aes(x=M,y=FST)) + ggplot2::xlab(expression(italic(M))) +
-    ggplot2::geom_point(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),col="red",
+    ggplot2::geom_point(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST,na.rm=T)),col="red",
                pch=16,size=3,stroke=2) +
-    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),
+    ggplot2::geom_segment(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST,na.rm=T)),
                           ggplot2::aes(x=M,xend=M,y=0,yend=Fup(K,M)), col="red",size=1 ) +
-    ggplot2::geom_label(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST_norm,na.rm=T)),
+    ggplot2::geom_label(data=dplyr::tibble(M=mean(M,na.rm=T),FST=mean(FST,na.rm=T)),
                         ggplot2::aes(x=M,y=FST,
                    label= paste0("mean norm FST=", format(FST,digits=2)," (",
-                                 format(mean(FST_norm,na.rm=T)/Fup(K,mean(M,na.rm=T))*100,digits=2),"% of range)" )),
+                                 format(mean(FST,na.rm=T)/Fup(K,mean(M,na.rm=T))*100,digits=2),"% of range)" )),
                nudge_x = nudge,nudge_y=0.07,col="red") +
     ggplot2::ylab(expression(italic(F[ST]))) +
     ggplot2::coord_cartesian(xlim=c(0,1),ylim=c(0,1),expand = F) +

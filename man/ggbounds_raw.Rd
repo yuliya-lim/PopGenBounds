@@ -2,35 +2,59 @@
 % Please edit documentation in R/plot_diff_bounds.R
 \name{ggbounds_raw}
 \alias{ggbounds_raw}
-\title{Plots differentiation statistics along with their ranges}
+\title{Plot differentiation statistics against M with their upper bounds}
 \usage{
-ggbounds_raw(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE)
+ggbounds_raw(
+  M,
+  FST,
+  GpST = NULL,
+  D = NULL,
+  K = 2,
+  show_colorbar = FALSE,
+  density_colors = TRUE,
+  point_color = "grey30",
+  ci = NULL,
+  ci_style = c("bands", "cross"),
+  ci_names = c(M = "M", FST = "FST", GpST = "G'ST", D = "D")
+)
 }
 \arguments{
-\item{M}{Numerical vector of frequency of the most frequent allele for each locus}
+\item{M}{Numeric vector of \eqn{M} values, one per locus.}
 
-\item{FST}{Numerical vector of FST values for each locus}
+\item{FST}{Numeric vector of \eqn{F_{ST}} values, one per locus.}
 
-\item{GpST}{Numerical vector of G prime ST values for each locus}
+\item{GpST}{Optional numeric vector of \eqn{G'_{ST}} values.}
 
-\item{D}{Numerical vector of D values for each locus}
+\item{D}{Optional numeric vector of Jost's \eqn{D} values.}
 
-\item{K}{Number of subpopulations}
+\item{K}{Number of populations.}
 
-\item{show_colorbar}{Bool, whether to show the relative density barplot}
+\item{show_colorbar}{Logical; if \code{TRUE}, show the colour bar for the
+relative point density (only used when \code{density_colors = TRUE}).}
+
+\item{density_colors}{Logical; if \code{TRUE} (default), colour points by
+relative point density, otherwise draw all points in \code{point_color}.}
+
+\item{point_color}{Colour of the points when \code{density_colors = FALSE}.}
+
+\item{ci}{Optional data frame with columns \code{statistic}, \code{value_lower} and
+\code{value_upper}, e.g. the \code{mean} element of \code{\link[=boot_stat]{boot_stat()}}. If \code{NULL}
+(default), no intervals are drawn.}
+
+\item{ci_style}{How to draw the intervals: \code{"bands"} (shaded bands across
+the plot) or \code{"cross"} (crossed error bars centred on the intervals).}
+
+\item{ci_names}{Named character vector giving, for \code{M}, \code{FST}, \code{GpST} and
+\code{D}, the label used for that quantity in the \code{statistic} column of \code{ci}.}
 }
 \value{
-A list of ggplot objects
+A list of three ggplot objects (\eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D});
+an element is \code{NULL} if the corresponding statistic was not supplied.
 }
 \description{
-Plots differentiation statistics along with their ranges
-}
-\examples{
-library(tidyverse)
-freqs_locus1 <- matrix(c(1,0.5,0,0.5),nrow=2)
-freqs_locus2 <- matrix(c(1,0.8,0,0.2),nrow=2)
-freqs_locus3 <- matrix(c(1,0.2,0,0.8),nrow=2)
-data  <- rbind(Diff(freqs_locus1),Diff(freqs_locus2),Diff(freqs_locus2))
-ggbounds_raw(M=data \%>\% filter(statistic=="M") \%>\% pull(value),
-             FST=data \%>\% filter(statistic=="FST") \%>\% pull(value))
+Plots per-locus values of \eqn{F_{ST}}, \eqn{G'_{ST}} and \eqn{D} against
+\eqn{M}, the mean frequency of the most frequent allele, together with the
+upper bound of each statistic for \code{K} populations. Dashed red lines and a
+red point mark the means over loci. Optionally, confidence intervals of the
+means are drawn, either as shaded bands or as crossed error bars.
 }

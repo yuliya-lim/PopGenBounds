@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_stats.R
 \name{plot_stats_3subpop}
 \alias{plot_stats_3subpop}
-\title{Plot differentiation statistics in case of K = 3 subpopulations}
+\title{Plot differentiation statistics for a given sample in case of K = 3 subpopulations}
 \usage{
 plot_stats_3subpop(D_loci, subpop_names)
 }
@@ -14,10 +14,12 @@ correspond to pair-wise differentiation statistics for each pair of subpopulatio
 \item{subpop_names}{A string vector containing names of subpopulations to be plotted.}
 }
 \value{
-A ggplot object.
+A stacked ggplot of four elements. The first plot corresponds to values of
+differentiation statistics computed for \eqn{K=3} subpopulations, the next three plots
+correspond to differentiation statistics computed across pairs of subpopulations.
 }
 \description{
-Plot differentiation statistics in case of K = 3 subpopulations
+Plot differentiation statistics for a given sample in case of K = 3 subpopulations
 }
 \examples{
 library(patchwork)

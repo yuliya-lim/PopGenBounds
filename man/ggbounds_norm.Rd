@@ -2,28 +2,29 @@
 % Please edit documentation in R/plot_diff_bounds.R
 \name{ggbounds_norm}
 \alias{ggbounds_norm}
-\title{Plots differentiation statistics normalized by their maximal values}
+\title{Plots differentiation statistics normalized by their maximal values at corresponding M}
 \usage{
 ggbounds_norm(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE)
 }
 \arguments{
-\item{M}{Numerical vector of frequency of the most frequent allele for each locus}
+\item{M}{Numeric vector of \eqn{M} values, one per locus.}
 
-\item{FST}{Numerical vector of FST values for each locus}
+\item{FST}{Numeric vector of \eqn{F_{ST}} values, one per locus.}
 
-\item{GpST}{Numerical vector of G prime ST values for each locus}
+\item{GpST}{Optional numeric vector of \eqn{G'_{ST}} values.}
 
-\item{D}{Numerical vector of D values for each locus}
+\item{D}{Optional numeric vector of Jost's \eqn{D} values.}
 
-\item{K}{Number of subpopulations}
+\item{K}{Number of populations.}
 
-\item{show_colorbar}{Bool, whether to show the relative density barplot}
+\item{show_colorbar}{Logical; if \code{TRUE}, show the colour bar for the
+relative point density (only used when \code{density_colors = TRUE}).}
 }
 \value{
 A list of ggplot objects
 }
 \description{
-Plots differentiation statistics normalized by their maximal values
+Plots differentiation statistics normalized by their maximal values at corresponding M
 }
 \examples{
 library(tidyverse)

@@ -1,15 +1,15 @@
 
 #' Compute differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D}
 #' for a list of data frames of allele frequencies or subclonal fractions.
-#' The differentiation statistics are computed across all available sub-populations.
+#' The differentiation statistics are computed across all available subpopulations.
 #'
 #' @param data_subclonal A list of data frames containing allele frequencies or subclonal fractions.
-#' @param col_indices Indices of columns corresponding to frequencies in sub-populations.
+#' @param col_indices Indices of columns corresponding to frequencies in subpopulations.
 #'
 #' @return A named list containing frequency of the most frequent allele \eqn{M}, \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D}
 #'   computed for each locus in each dataset.
 #' @export
-compute_diff <- function(data_subclonal, col_indices) {
+compute_diff_list <- function(data_subclonal, col_indices) {
   result <- lapply(names(data_subclonal), function(name) {
     df <- data_subclonal[[name]]
     list_freq <- make_popgen_input(df[, col_indices])
@@ -19,15 +19,18 @@ compute_diff <- function(data_subclonal, col_indices) {
   return(result)
 }
 
-#' Compute differentiation statistics in case of K=3 subpopulations
+#' Compute differentiation statistics \eqn{F_{ST}}, \eqn{G'_{ST}}, and \eqn{D} for K = 3 subpopulations.
 #'
-#' @param list_loci A list of K × 2 matrices of allele frequencies, one per locus.
-#' Each matrix contains frequencies of the reference and alternative alleles (columns)
-#' for each subpopulation (rows).
+#' @param list_loci A list of \eqn{K \times 2} matrices of allele frequencies, one per locus.
+#'   Each matrix contains the frequencies of the reference and alternative alleles (columns)
+#'   for each subpopulation (rows).
 #'
-#' @returns Four lists of matrices containing differentiation statistics FST, G'ST, D and a vector of frequencies M.
-#' The first list corresponds to 3 subpopulations together, the remaining lists
-#' correspond to pair-wise differentiation statistics for each pair of subpopulations out of 3 subpopulations.
+#' @return A list of four elements:
+#'   - The first element is a list of matrices containing differentiation statistics
+#'     \eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D}, and a vector of frequencies \eqn{M}
+#'     computed across all three sub-populations.
+#'   - The remaining three elements are lists of matrices containing pairwise differentiation
+#'     statistics for each pair of sub-populations out of the three.
 #' @export
 #'
 #' @examples

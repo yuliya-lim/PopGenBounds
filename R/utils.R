@@ -62,10 +62,13 @@ swap_columns <- function(df, col1, col2) {
   df[, cols]
 }
 
+#' Transform a combined column in multiple separate columns
+#'
 #' If a dataframe column consist of two columns, replaces the combined column by the two separate columns.
 #'
 #' @param data_list A list of dataframes
 #' @param idx Index of the column to replace
+#' @export
 #'
 #' @returns List of modified dataframes
 unparse_columns <- function(data_list, idx=3){
