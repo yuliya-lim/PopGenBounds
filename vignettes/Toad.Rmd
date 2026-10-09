@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette shows an example analysis of yellow toad microsatellite data from Pohele et al. 2021, used to produce figure 6 from Alcala et al., In prep.
+This vignette shows an example analysis of yellow toad microsatellite data from Prohl et al. 2021, used to produce Figure 7 from Lim et al.
 
 ```{r setup}
 library(PopGenBounds)
@@ -25,22 +25,52 @@ library(patchwork)
 We load the dataset
 ```{r}
 Toad_microsat_freq = PopGenBounds::Toad_microsat_freq
+toad_genotypes <- PopGenBounds::toad_genotypes
 ```
 
 # Plotting the allele frequency tables
 ```{r}
-ggfreqtable(Toad_microsat_freq[[1]])
+# allele frequency table for the first locus
+ggfreqtable(Toad_microsat_freq[[3]])
 ```
 
 # Computing the statistics
 For all subpopulations together (K=47)
 ```{r}
 Diff_toad = lapply(Toad_microsat_freq,Diff)
+
+# check mean statistics values as ratio of averages
+HS <- mean(sapply(Diff_toad, function(d) d$value[d$statistic == "HS"]))
+HT <- mean(sapply(Diff_toad, function(d) d$value[d$statistic == "HT"]))
+1 - HS / HT
 ```
 
 For pairs of subpopulations (K=2)
 ```{r}
 Diff_toad_pairs = lapply(Toad_microsat_freq,function(f){sapply(1:46, function(i){ sapply((i+1):47, function(j) Diff(f[c(i,j),])$value)})} )
+```
+
+# Computing bootstrap confidence intervals
+For all subpopulations together (K=47)
+```{r}
+set.seed(2021)
+res <- boot_stat(toad_genotypes, stat_fun = Diff, B = 1000, type = "percentile")
+res$mean             # check the labels in the 'statistic' column
+```
+
+```{r}
+# save bootstrap statistics
+per_locus <- do.call(rbind, lapply(names(res$estimate), function(l)
+  cbind(locus = l, res$estimate[[l]])))
+
+#avg_limits <- aggregate(cbind(value, value_lower, value_upper) ~ statistic,
+#                        data = per_locus, FUN = mean)
+
+# keep the original order of the statistics (M, FST, G'ST, D)
+#avg_limits <- avg_limits[match(unique(per_locus$statistic), avg_limits$statistic), ]
+#avg_limits
+
+write.csv(per_locus, "../../output/toad_per_locus_basic_ci_hs_ht.csv", row.names = FALSE)
 ```
 
 
@@ -52,12 +82,18 @@ toad.tib = tibble(M=unlist( sapply(Diff_toad,function(x){x[1,2]})),
                   GpST=unlist( sapply(Diff_toad,function(x){x[3,2]})),
                   D=unlist( sapply(Diff_toad,function(x){x[4,2]})))
 
-ggtoad = ggbounds(M=toad.tib$M,FST=toad.tib$FST,GpST=toad.tib$GpST,D=toad.tib$D,K=47)
+ggtoad = ggbounds_raw(M=toad.tib$M,FST=toad.tib$FST,GpST=toad.tib$GpST,D=toad.tib$D,K=47, ci=res$mean, density_colors = FALSE, ci_style="bands")
 
 ggtoad[[1]]+ ggtoad[[2]]+ ggtoad[[3]]
 ```
 
-For K=2
+
+```{r}
+fig <- ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]] + plot_layout(guides = "collect")
+ggsave("Toad_files/figures/toad_bounds_CI_bands_ratio_averages.pdf", fig, width = 7, height = 2.3)
+```
+
+For K=bp
 
 ```{r}
 toad.tib_pairs = tibble(M=as.numeric(sapply(Diff_toad_pairs, function(x) unlist(sapply(x,function(y){y[1,]})))),
