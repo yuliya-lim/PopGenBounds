@@ -44,10 +44,10 @@ freq <- microsat_freq(geno, lv)
 all.equal(res$estimate[[1]]$value, Diff(freq[[1]])$value[1:4])   # TRUE
 
 # multilocus FST: equal to a ratio of averages computed by hand
-tabs <- lapply(freq, Diff)
-HS <- mean(sapply(tabs, function(d) d$value[d$statistic == "HS"]))
-HT <- mean(sapply(tabs, function(d) d$value[d$statistic == "HT"]))
-all.equal(res$mean$value[res$mean$statistic == "FST"], 1 - HS / HT)  # TRUE
+#tabs <- lapply(freq, Diff)
+#HS <- mean(sapply(tabs, function(d) d$value[d$statistic == "HS"]))
+#HT <- mean(sapply(tabs, function(d) d$value[d$statistic == "HT"]))
+#all.equal(res$mean$value[res$mean$statistic == "FST"], 1 - HS / HT)  # TRUE
 
 # Stage 5: Results are reproducible -----------------
 #The same seed must give exactly the same results.

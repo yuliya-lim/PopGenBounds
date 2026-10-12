@@ -10,7 +10,7 @@ boot_stat(
   B = 1000,
   level = 0.95,
   type = c("basic", "percentile"),
-  ci_cols = "value",
+  value_col = "value",
   label_col = "statistic",
   keep_boot = FALSE,
   ...
@@ -31,9 +31,9 @@ boot_stat(
 reflected around the estimate, which corrects for the bias estimated by
 the bootstrap) or \code{"percentile"} (bootstrap percentiles as they are).}
 
-\item{ci_cols}{Columns of the \code{stat_fun} output to compute intervals for.}
-
-\item{label_col}{Column of the \code{stat_fun} output naming the statistics.}
+\item{value_col}{Name of the column of the \code{stat_fun} output that holds the
+statistic values (default \code{"value"}). Confidence intervals, bias and
+bias-corrected values are computed for this column#' @param label_col Column of the \code{stat_fun} output naming the statistics.}
 
 \item{keep_boot}{If \code{TRUE}, also return the bootstrap values.}
 
@@ -43,12 +43,13 @@ the bootstrap) or \code{"percentile"} (bootstrap percentiles as they are).}
 A list with
 \describe{
 \item{estimate}{List (one element per locus) of the \code{stat_fun} output
-for the original data, with added columns \verb{<col>_lower} and
-\verb{<col>_upper} for each column in \code{ci_cols}.}
-\item{mean}{Data frame with, for each statistic, the mean over loci
-of each column in \code{ci_cols} for the original data, and its percentile
-interval (\verb{<col>_lower}, \verb{<col>_upper}), computed from the mean over
-loci within each bootstrap replicate.}
+for the original data, with added columns \verb{<value_col>_lower} and
+\verb{<value_col>_upper} (confidence limits), \verb{<value_col>_bias} (mean of
+bootstrap replicates minus estimate) and \verb{<value_col>_corrected}
+(estimate minus bias).}
+\item{mean}{Data frame with the mean over loci of each statistic for the
+original data, with the same added columns as \code{estimate}, computed
+from the mean over loci within each bootstrap replicate.}
 \item{boot}{If \code{keep_boot = TRUE}: list (one element per locus) of the
 bootstrap outputs stacked into one table with a \code{replicate} column;
 otherwise \code{NULL}.}

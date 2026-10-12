@@ -38,11 +38,6 @@ ggfreqtable(Toad_microsat_freq[[3]])
 For all subpopulations together (K=47)
 ```{r}
 Diff_toad = lapply(Toad_microsat_freq,Diff)
-
-# check mean statistics values as ratio of averages
-HS <- mean(sapply(Diff_toad, function(d) d$value[d$statistic == "HS"]))
-HT <- mean(sapply(Diff_toad, function(d) d$value[d$statistic == "HT"]))
-1 - HS / HT
 ```
 
 For pairs of subpopulations (K=2)
@@ -53,9 +48,15 @@ Diff_toad_pairs = lapply(Toad_microsat_freq,function(f){sapply(1:46, function(i)
 # Computing bootstrap confidence intervals
 For all subpopulations together (K=47)
 ```{r}
-set.seed(2021)
-res <- boot_stat(toad_genotypes, stat_fun = Diff, B = 1000, type = "percentile")
+set.seed(25)
+res <- boot_stat(toad_genotypes, stat_fun = Diff, B = 10, type="basic")
 res$mean             # check the labels in the 'statistic' column
+```
+
+
+```{r}
+out_dir <- "C:/Users/limy/OneDrive - International Agency for Research on Cancer/Documents/NoahCollab/code/output"
+write.csv(res$mean, file.path(out_dir, "toad_mean_ci_ratio_of_averages.csv"), row.names = FALSE)
 ```
 
 ```{r}
@@ -63,14 +64,7 @@ res$mean             # check the labels in the 'statistic' column
 per_locus <- do.call(rbind, lapply(names(res$estimate), function(l)
   cbind(locus = l, res$estimate[[l]])))
 
-#avg_limits <- aggregate(cbind(value, value_lower, value_upper) ~ statistic,
-#                        data = per_locus, FUN = mean)
-
-# keep the original order of the statistics (M, FST, G'ST, D)
-#avg_limits <- avg_limits[match(unique(per_locus$statistic), avg_limits$statistic), ]
-#avg_limits
-
-write.csv(per_locus, "../../output/toad_per_locus_basic_ci_hs_ht.csv", row.names = FALSE)
+#write.csv(per_locus, "../../output/toad_per_locus_basic_ci.csv", row.names = FALSE)
 ```
 
 
@@ -90,7 +84,7 @@ ggtoad[[1]]+ ggtoad[[2]]+ ggtoad[[3]]
 
 ```{r}
 fig <- ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]] + plot_layout(guides = "collect")
-ggsave("Toad_files/figures/toad_bounds_CI_bands_ratio_averages.pdf", fig, width = 7, height = 2.3)
+#ggsave("Toad_files/figures/toad_bounds_CI_bands_ratio_averages.pdf", fig, width = 7, height = 2.3)
 ```
 
 For K=bp

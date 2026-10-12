@@ -29,8 +29,7 @@ Diff = function(freqs){
   closeness = tibble::tibble( statistic=c("FST","G'ST","D"), bound_closeness = stats$value/bounds$bound)
 
   return(dplyr::bind_rows(tibble::tibble(statistic="M",value=M),
-                          dplyr::left_join(dplyr::left_join(stats,bounds,by="statistic"),closeness,by="statistic"),
-                          tibble::tibble(statistic=c("HS","HT"),value=c(HS,HT))))
+                          dplyr::left_join(dplyr::left_join(stats,bounds,by="statistic"),closeness,by="statistic")))
 }
 
 

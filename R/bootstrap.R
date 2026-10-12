@@ -27,20 +27,22 @@
 #' @param type Interval type: `"basic"` (default; bootstrap percentiles
 #'   reflected around the estimate, which corrects for the bias estimated by
 #'   the bootstrap) or `"percentile"` (bootstrap percentiles as they are).
-#' @param ci_cols Columns of the `stat_fun` output to compute intervals for.
-#' @param label_col Column of the `stat_fun` output naming the statistics.
+#' @param value_col Name of the column of the `stat_fun` output that holds the
+#'   statistic values (default `"value"`). Confidence intervals, bias and
+#'   bias-corrected values are computed for this column#' @param label_col Column of the `stat_fun` output naming the statistics.
 #' @param keep_boot If `TRUE`, also return the bootstrap values.
 #' @param ... Further arguments passed to `stat_fun`.
 #'
 #' @return A list with
 #'   \describe{
 #'     \item{estimate}{List (one element per locus) of the `stat_fun` output
-#'       for the original data, with added columns `<col>_lower` and
-#'       `<col>_upper` for each column in `ci_cols`.}
-#'     \item{mean}{Data frame with, for each statistic, the mean over loci
-#'       of each column in `ci_cols` for the original data, and its percentile
-#'       interval (`<col>_lower`, `<col>_upper`), computed from the mean over
-#'       loci within each bootstrap replicate.}
+#'       for the original data, with added columns `<value_col>_lower` and
+#'       `<value_col>_upper` (confidence limits), `<value_col>_bias` (mean of
+#'       bootstrap replicates minus estimate) and `<value_col>_corrected`
+#'       (estimate minus bias).}
+#'     \item{mean}{Data frame with the mean over loci of each statistic for the
+#'       original data, with the same added columns as `estimate`, computed
+#'       from the mean over loci within each bootstrap replicate.}
 #'     \item{boot}{If `keep_boot = TRUE`: list (one element per locus) of the
 #'       bootstrap outputs stacked into one table with a `replicate` column;
 #'       otherwise `NULL`.}
@@ -57,9 +59,10 @@
 #' res$estimate[[1]]
 #' res$mean
 #' }
-boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("basic", "percentile"),
-                      ci_cols = "value", label_col = "statistic", keep_boot = FALSE, ...) {
+boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("percentile","basic"),
+                      value_col = "value", label_col = "statistic", keep_boot = FALSE, ...) {
   type <- match.arg(type)
+  genotypes$pop <- droplevels(genotypes$pop)              # only populations present (e.g. pairwise subsets)
   lv <- microsat_allele_levels(genotypes)                 # fixed allele set (original data)
   freq_orig <- microsat_freq(genotypes, lv)
   estimate  <- lapply(freq_orig, stat_fun, ...)           # stats of original data, per locus
@@ -74,15 +77,15 @@ boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("bas
   # confidence intervals, locus by locus
   result <- lapply(seq_along(estimate), function(k) {
     boot_k <- lapply(boot, function(r) r[[k]])            # locus k from every replicate
-    boot_ci_df(estimate[[k]], boot_k, level, ci_cols, type)
+    boot_ci_df(estimate[[k]], boot_k, level, value_col, type)
   })
   names(result) <- names(estimate)
 
   # mean over loci, within each replicate, and its confidence interval
-  K <- nlevels(genotypes$pop)
-  mean_obs  <- mean_over_loci(estimate, K, ci_cols, label_col)                     # original data
-  mean_boot <- lapply(boot, function(r) mean_over_loci(r, K, ci_cols, label_col))  # one table per replicate
-  mean_tab  <- boot_ci_df(mean_obs, mean_boot, level, ci_cols, type)
+  #K <- nlevels(genotypes$pop)
+  mean_obs  <- mean_over_loci(estimate, value_col, label_col)                     # original data
+  mean_boot <- lapply(boot, function(r) mean_over_loci(r, value_col, label_col))  # one table per replicate
+  mean_tab  <- boot_ci_df(mean_obs, mean_boot, level, value_col, type)
 
   # optional: bootstrap values, stacked per locus
   boot_tables <- NULL
@@ -95,58 +98,56 @@ boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("bas
   list(estimate = result, mean=mean_tab, boot = boot_tables, B = B, level = level)
 }
 
-# Internal: mean over loci of column `col`, row by row (one value per statistic).
-# tabs = list of per-locus tables with the same rows in the same order.
-mean_over_loci <- function(tabs, K, col="value", label_col="statistic") {
+# Internal: mean over loci of the value column, row by row (one value per
+# statistic). tabs = list of per-locus tables with the same rows in the same
+# order. Returns a table with the label column and the mean values.
+mean_over_loci <- function(tabs, col="value", label_col="statistic") {
   # Ratio of averages approach for computing mean differentiation stats
-  avg <- function(s) mean(vapply(tabs, function(d) d[[col]][d[[label_col]] == s], numeric(1)))
-  M  <- avg("M")
-  HS <- avg("HS")
-  HT <- avg("HT")
-  FST  <- 1 - HS / HT
-  GpST <- FST * (K - 1 + HS) / (K - 1) / (1 - HS)
-  D    <- K / (K - 1) * (HT - HS) / (1 - HS)
+  #avg <- function(s) mean(vapply(tabs, function(d) d[[col]][d[[label_col]] == s], numeric(1)))
+  #M  <- avg("M")
+  #HS <- avg("HS")
+  #HT <- avg("HT")
+  #FST  <- 1 - HS / HT
+  #GpST <- FST * (K - 1 + HS) / (K - 1) / (1 - HS)
+  #D    <- K / (K - 1) * (HT - HS) / (1 - HS)
 
-  out <- data.frame(c("M", "FST", "G'ST", "D"))
-  names(out) <- label_col
-  out[[col]] <- c(M, FST, GpST, D)
-  out
-
-  #out <- data.frame(tabs[[1]][label_col])
-  #for (col in ci_cols) {
-  #  vals <- matrix(unlist(lapply(tabs, function(d) d[[col]])), nrow = nrow(tabs[[1]]))
-  #  out[[col]] <- rowMeans(vals)
-  #}
+  #out <- data.frame(c("M", "FST", "G'ST", "D"))
+  #names(out) <- label_col
+  #out[[col]] <- c(M, FST, GpST, D)
   #out
+
+  out <- data.frame(tabs[[1]][label_col])
+  vals <- matrix(unlist(lapply(tabs, function(d) d[[col]])), nrow = nrow(tabs[[1]]))
+  out[[col]] <- rowMeans(vals)
+  out
 }
 
-# Internal: add bootstrap results for each column in ci_cols to the
-# estimate table of one locus (or of the mean over loci):
-#   <col>_lower, <col>_upper  confidence limits (percentile or basic)
-#   <col>_bias                estimated bias: mean of replicates - estimate
-#   <col>_corrected           bias-corrected estimate: estimate - bias
+# Internal: add bootstrap results for the value column to the estimate
+# table of one locus (or of the mean over loci):
+#   <value_col>_lower, <value_col>_upper  confidence limits (percentile or basic)
+#   <value_col>_bias                      mean of bootstrap replicates - estimate
+#   <value_col>_corrected                 bias-corrected estimate: estimate - bias
 # boot_k = list of B bootstrap tables; intervals are computed row by row
 # (same row order in every table).
-boot_ci_df <- function(estimate, boot_k, level, ci_cols, type = "basic") {
+boot_ci_df <- function(estimate, boot_k, level, col, type = "percentile") {
   probs <- c((1 - level) / 2, 1 - (1 - level) / 2)
-  for (col in ci_cols) {
-    # rows x B matrix: column b holds replicate b
-    vals <- matrix(unlist(lapply(boot_k, function(d) d[[col]])), nrow = nrow(estimate))
-    q_lo <- apply(vals, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
-    q_hi <- apply(vals, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
-    est  <- estimate[[col]]
+  # rows x B matrix: column b holds replicate b
+  vals <- matrix(unlist(lapply(boot_k, function(d) d[[col]])), nrow = nrow(estimate))
+  q_lo <- apply(vals, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
+  q_hi <- apply(vals, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
+  est  <- estimate[[col]]
 
-    if (type == "percentile") {
-      estimate[[paste0(col, "_lower")]] <- q_lo
-      estimate[[paste0(col, "_upper")]] <- q_hi
-    } else {                                              # basic: percentiles reflected around the estimate
-      estimate[[paste0(col, "_lower")]] <- 2 * est - q_hi
-      estimate[[paste0(col, "_upper")]] <- 2 * est - q_lo
-    }
-    bias <- rowMeans(vals, na.rm = TRUE) - est
-    estimate[[paste0(col, "_bias")]]      <- bias
-    estimate[[paste0(col, "_corrected")]] <- est - bias
+  if (type == "percentile") {
+    estimate[[paste0(col, "_lower")]] <- q_lo
+    estimate[[paste0(col, "_upper")]] <- q_hi
+  } else {                                              # basic: percentiles reflected around the estimate
+    estimate[[paste0(col, "_lower")]] <- 2 * est - q_hi
+    estimate[[paste0(col, "_upper")]] <- 2 * est - q_lo
   }
+  bias <- rowMeans(vals, na.rm = TRUE) - est
+  estimate[[paste0(col, "_bias")]]      <- bias
+  estimate[[paste0(col, "_corrected")]] <- est - bias
+
   estimate
 }
 
