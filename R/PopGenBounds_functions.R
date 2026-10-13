@@ -17,7 +17,8 @@ Diff = function(freqs){
   M = max(colMeans(freqs))
   HS = mean(1-rowSums(freqs**2))
   HT = 1-sum(colMeans(freqs)**2)
-  FST = 1-HS/HT
+  #FST = 1-HS/HT
+  FST = if (HT < 1e-12) 0 else (1-HS/HT)  # no variation (M = 1): no differentiation
   GpST= FST*(K-1+HS)/(K-1)/(1-HS)
   D = K/(K-1)*(HT-HS)/(1-HS)
   #warning()
