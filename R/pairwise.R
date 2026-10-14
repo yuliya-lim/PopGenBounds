@@ -34,9 +34,9 @@ pairwise_stats <- function(freq_list) {
   v     <- pairwise_values(freq_list, up)   # returns 'per_locus' (3-dim array pairs x stats x loci) and 'mean' (pairs x stats array of means over loci)
 
   estimate <- lapply(seq_along(freq_list), function(l)
-    ci_table(matrix(v$per_locus[, , l], nrow = nrow(up)), NULL, pairs))
+    pairs_table(matrix(v$per_locus[, , l], nrow = nrow(up)), NULL, pairs))
   names(estimate) <- names(freq_list)
-  list(estimate = estimate, mean = ci_table(v$mean, NULL, pairs))
+  list(estimate = estimate, mean = pairs_table(v$mean, NULL, pairs))
 }
 
 
@@ -69,7 +69,7 @@ pairwise_stats <- function(freq_list) {
 #'   }
 #' @export
 boot_pairwise <- function(genotypes, B = 1000, level = 0.95,
-                          type = c("basic", "percentile"), locus_ci = TRUE) {
+                          type = c("percentile","basic"), locus_ci = TRUE) {
   type <- match.arg(type)
   genotypes$pop <- droplevels(genotypes$pop)
   lv    <- microsat_allele_levels(genotypes)
@@ -80,7 +80,7 @@ boot_pairwise <- function(genotypes, B = 1000, level = 0.95,
   P <- nrow(up)                                                     # number of pairs
   L <- length(lv)                                                   # number of loci
 
-  obs <- pairwise_values(freq, up)                                  # original data
+  obs <- pairwise_values(freq, up)                                  # original data (matrices)
 
   # bootstrap values: pairs x statistics x (loci) x replicates
   boot_mean <- array(NA_real_, dim = c(P, 4, B))
@@ -94,13 +94,14 @@ boot_pairwise <- function(genotypes, B = 1000, level = 0.95,
   }
 
   estimate <- lapply(seq_len(L), function(l) {
-    vals <- if (locus_ci) array(boot_loc[, , l, ], dim = c(P, 4, B)) else NULL
-    ci_table(matrix(obs$per_locus[, , l], nrow = P), vals, pairs, level, type)
+    est <- matrix(obs$per_locus[, , l], nrow = P)
+    ci  <- if (locus_ci) pairs_ci(est, array(boot_loc[, , l, ], dim = c(P, 4, B)), level, type) else NULL
+    pairs_table(est, pairs, ci)
   })
   names(estimate) <- names(lv)
 
   list(estimate = estimate,
-       mean     = ci_table(obs$mean, boot_mean, pairs, level, type),
+       mean     = pairs_table(obs$mean, pairs, pairs_ci(obs$mean, boot_mean, level, type)),
        B = B, level = level, type = type)
 }
 
@@ -148,31 +149,23 @@ pairwise_values <- function(freq_list, up) {
   list(per_locus = arr, mean = avg)
 }
 
-# Long table (one row per pair and statistic) from estimates and, optionally,
-# bootstrap values. est = pairs x 4 statistics; vals = pairs x 4 x B or NULL.
-ci_table <- function(est, vals, pairs, level = 0.95, type = "basic") {
+# Internal: long table (one row per pair and statistic).
+# est = pairs x 4 statistics; ci = optional list of 4 data frames from boot_ci_core().
+pairs_table <- function(est, pairs, ci = NULL) {
   stat_names <- c("M", "FST", "G'ST", "D")
-  P <- nrow(pairs)
   out <- lapply(seq_along(stat_names), function(k) {
     tab <- data.frame(pairs, statistic = stat_names[k], value = est[, k])
-    if (!is.null(vals)) {
-      v     <- matrix(vals[, k, ], nrow = P)                    # pairs x B
-      probs <- c((1 - level) / 2, 1 - (1 - level) / 2)
-      q_lo  <- apply(v, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
-      q_hi  <- apply(v, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
-      if (type == "percentile") {
-        tab$value_lower <- q_lo
-        tab$value_upper <- q_hi
-      } else {                                                  # basic: reflected around the estimate
-        tab$value_lower <- 2 * tab$value - q_hi
-        tab$value_upper <- 2 * tab$value - q_lo
-      }
-      tab$value_bias      <- rowMeans(v, na.rm = TRUE) - tab$value
-      tab$value_corrected <- tab$value - tab$value_bias
-    }
+    if (!is.null(ci)) tab <- cbind(tab, ci[[k]])
     tab
   })
   out <- do.call(rbind, out)
   rownames(out) <- NULL
   out
+}
+
+# Internal: intervals for each statistic. est = pairs x 4; vals = pairs x 4 x B.
+pairs_ci <- function(est, vals, level, type) {
+  P <- nrow(est)
+  lapply(seq_len(ncol(est)), function(k)
+    boot_ci_core(est[, k], matrix(vals[, k, ], nrow = P), level, type))
 }

@@ -122,35 +122,33 @@ mean_over_loci <- function(tabs, col="value", label_col="statistic") {
   out
 }
 
-# Internal: add bootstrap results for the value column to the estimate
-# table of one locus (or of the mean over loci):
-#   <value_col>_lower, <value_col>_upper  confidence limits (percentile or basic)
-#   <value_col>_bias                      mean of bootstrap replicates - estimate
-#   <value_col>_corrected                 bias-corrected estimate: estimate - bias
-# boot_k = list of B bootstrap tables; intervals are computed row by row
-# (same row order in every table).
-boot_ci_df <- function(estimate, boot_k, level, col, type = "percentile") {
+# Internal: bootstrap confidence limits, bias and bias-corrected values.
+# est = vector of estimates (one per row); vals = matrix rows x B of bootstrap values.
+# Returns a data frame with one row per estimate.
+boot_ci_core <- function(est, vals, level = 0.95, type = "basic") {
   probs <- c((1 - level) / 2, 1 - (1 - level) / 2)
-  # rows x B matrix: column b holds replicate b
-  vals <- matrix(unlist(lapply(boot_k, function(d) d[[col]])), nrow = nrow(estimate))
-  q_lo <- apply(vals, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
-  q_hi <- apply(vals, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
-  est  <- estimate[[col]]
-
+  q_lo  <- apply(vals, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
+  q_hi  <- apply(vals, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
+  bias  <- rowMeans(vals, na.rm = TRUE) - est
   if (type == "percentile") {
-    estimate[[paste0(col, "_lower")]] <- q_lo
-    estimate[[paste0(col, "_upper")]] <- q_hi
-  } else {                                              # basic: percentiles reflected around the estimate
-    estimate[[paste0(col, "_lower")]] <- 2 * est - q_hi
-    estimate[[paste0(col, "_upper")]] <- 2 * est - q_lo
+    lower <- q_lo; upper <- q_hi
+  } else {                                        # basic: reflected around the estimate
+    lower <- 2 * est - q_hi; upper <- 2 * est - q_lo
   }
-  bias <- rowMeans(vals, na.rm = TRUE) - est
-  estimate[[paste0(col, "_bias")]]      <- bias
-  estimate[[paste0(col, "_corrected")]] <- est - bias
-
-  estimate
+  data.frame(value_lower = lower, value_upper = upper,
+             value_bias = bias, value_corrected = est - bias)
 }
 
+# Internal: add bootstrap results for the value column to the estimate table
+# of one locus (or of the mean over loci): value_lower, value_upper,
+# value_bias and value_corrected (see boot_ci_core()).
+# boot_k = list of B bootstrap tables; same row order in every table.
+boot_ci_df <- function(estimate, boot_k, level, type = "basic", col = "value") {
+  vals <- matrix(unlist(lapply(boot_k, function(d) d[[col]])), nrow = nrow(estimate))   # rows x B
+  ci   <- boot_ci_core(estimate[[col]], vals, level, type)
+  estimate[names(ci)] <- ci
+  estimate
+}
 
 # Internal: row indices of one bootstrap sample, resampling individuals
 # with replacement within each population (sample sizes unchanged).
