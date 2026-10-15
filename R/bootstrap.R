@@ -24,9 +24,10 @@
 #'   (e.g. [Diff()]). Rows must come out in the same order every time.
 #' @param B Number of bootstrap replicates.
 #' @param level Confidence level of the intervals.
-#' @param type Interval type: `"basic"` (default; bootstrap percentiles
-#'   reflected around the estimate, which corrects for the bias estimated by
-#'   the bootstrap) or `"percentile"` (bootstrap percentiles as they are).
+#' @param type Interval type: `"percentile"` (default; the 2.5% and 97.5%
+#'   quantiles of the bootstrap values, for `level = 0.95`) or `"basic"`
+#'   (the same quantiles reflected around the estimate, which corrects for
+#'   the bias estimated by the bootstrap).
 #' @param value_col Name of the column of the `stat_fun` output that holds the
 #'   statistic values (default `"value"`). Confidence intervals, bias and
 #'   bias-corrected values are computed for this column#' @param label_col Column of the `stat_fun` output naming the statistics.
@@ -48,7 +49,7 @@
 #'       otherwise `NULL`.}
 #'     \item{B}{Number of bootstrap replicates used.}
 #'     \item{level}{Confidence level of the intervals.}
-#'     \item{type}{Interval type used.}
+#'     \item{type}{Interval type used: `"percentile"` or `"basic"`.}
 #'   }
 #' @export
 #'
@@ -77,7 +78,7 @@ boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("per
   # confidence intervals, locus by locus
   result <- lapply(seq_along(estimate), function(k) {
     boot_k <- lapply(boot, function(r) r[[k]])            # locus k from every replicate
-    boot_ci_df(estimate[[k]], boot_k, level, value_col, type)
+    boot_ci_df(estimate[[k]], boot_k, level=level, type=type, col=value_col)
   })
   names(result) <- names(estimate)
 
@@ -85,7 +86,7 @@ boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("per
   #K <- nlevels(genotypes$pop)
   mean_obs  <- mean_over_loci(estimate, value_col, label_col)                     # original data
   mean_boot <- lapply(boot, function(r) mean_over_loci(r, value_col, label_col))  # one table per replicate
-  mean_tab  <- boot_ci_df(mean_obs, mean_boot, level, value_col, type)
+  mean_tab  <- boot_ci_df(mean_obs, mean_boot, level=level, type=type, col=value_col)
 
   # optional: bootstrap values, stacked per locus
   boot_tables <- NULL
@@ -95,7 +96,7 @@ boot_stat <- function(genotypes, stat_fun, B = 1000, level = 0.95, type = c("per
     names(boot_tables) <- names(estimate)
   }
 
-  list(estimate = result, mean=mean_tab, boot = boot_tables, B = B, level = level)
+  list(estimate = result, mean=mean_tab, boot = boot_tables, B = B, level = level, type = type)
 }
 
 # Internal: mean over loci of the value column, row by row (one value per
@@ -125,7 +126,7 @@ mean_over_loci <- function(tabs, col="value", label_col="statistic") {
 # Internal: bootstrap confidence limits, bias and bias-corrected values.
 # est = vector of estimates (one per row); vals = matrix rows x B of bootstrap values.
 # Returns a data frame with one row per estimate.
-boot_ci_core <- function(est, vals, level = 0.95, type = "basic") {
+boot_ci_core <- function(est, vals, level = 0.95, type = "percentile") {
   probs <- c((1 - level) / 2, 1 - (1 - level) / 2)
   q_lo  <- apply(vals, 1, stats::quantile, probs = probs[1], na.rm = TRUE)
   q_hi  <- apply(vals, 1, stats::quantile, probs = probs[2], na.rm = TRUE)
@@ -143,7 +144,7 @@ boot_ci_core <- function(est, vals, level = 0.95, type = "basic") {
 # of one locus (or of the mean over loci): value_lower, value_upper,
 # value_bias and value_corrected (see boot_ci_core()).
 # boot_k = list of B bootstrap tables; same row order in every table.
-boot_ci_df <- function(estimate, boot_k, level, type = "basic", col = "value") {
+boot_ci_df <- function(estimate, boot_k, level, type = "percentile", col = "value") {
   vals <- matrix(unlist(lapply(boot_k, function(d) d[[col]])), nrow = nrow(estimate))   # rows x B
   ci   <- boot_ci_core(estimate[[col]], vals, level, type)
   estimate[names(ci)] <- ci

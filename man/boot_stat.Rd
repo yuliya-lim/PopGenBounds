@@ -9,7 +9,7 @@ boot_stat(
   stat_fun,
   B = 1000,
   level = 0.95,
-  type = c("basic", "percentile"),
+  type = c("percentile", "basic"),
   value_col = "value",
   label_col = "statistic",
   keep_boot = FALSE,
@@ -27,9 +27,10 @@ boot_stat(
 
 \item{level}{Confidence level of the intervals.}
 
-\item{type}{Interval type: \code{"basic"} (default; bootstrap percentiles
-reflected around the estimate, which corrects for the bias estimated by
-the bootstrap) or \code{"percentile"} (bootstrap percentiles as they are).}
+\item{type}{Interval type: \code{"percentile"} (default; the 2.5\% and 97.5\%
+quantiles of the bootstrap values, for \code{level = 0.95}) or \code{"basic"}
+(the same quantiles reflected around the estimate, which corrects for
+the bias estimated by the bootstrap).}
 
 \item{value_col}{Name of the column of the \code{stat_fun} output that holds the
 statistic values (default \code{"value"}). Confidence intervals, bias and
@@ -55,7 +56,7 @@ bootstrap outputs stacked into one table with a \code{replicate} column;
 otherwise \code{NULL}.}
 \item{B}{Number of bootstrap replicates used.}
 \item{level}{Confidence level of the intervals.}
-\item{type}{Interval type used.}
+\item{type}{Interval type used: \code{"percentile"} or \code{"basic"}.}
 }
 }
 \description{
