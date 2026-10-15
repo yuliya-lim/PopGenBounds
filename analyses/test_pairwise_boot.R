@@ -171,3 +171,22 @@ estimate <- lapply(seq_along(toad_frequencies), function(l)
 
 names(estimate) <- names(toad_frequencies)
 
+mean = ci_table(v$mean, NULL, pairs)
+mean
+
+## Test pairwise.R module -------
+# compute diff statistics for each pair of populations from original data
+pw  <- pairwise_stats(toad_frequencies)   # observed values
+
+d <- pw$estimate[["5F"]]
+table(d$statistic)                               # 1081 rows each for M, FST, G'ST, D
+d[d$pop1 == "WUN" & d$pop2 == "LIE", ]
+
+# run bootstrap and compute bootstrap_CI for each pair of statistics
+set.seed(1)
+res <- boot_pairwise(toad_genotypes, B = 20)          # with CIs
+names(res)
+
+pts <- do.call(rbind, res$estimate)
+all.equal(mean(pts$value[pts$statistic == "FST"], na.rm = TRUE),
+          res$overall$value[res$overall$statistic == "FST"])   # TRUE

@@ -16,6 +16,8 @@ A list with
 \item{estimate}{List (one element per locus) of tables with columns
 \code{pop1}, \code{pop2}, \code{statistic} and \code{value}, one row per pair and statistic.}
 \item{mean}{Table with the same columns: mean over loci of each statistic.}
+\item{overall}{Table with columns \code{statistic} and \code{value}: mean of each
+statistic over all pairs and loci.}
 }
 }
 \description{

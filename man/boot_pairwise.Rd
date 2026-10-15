@@ -8,7 +8,7 @@ boot_pairwise(
   genotypes,
   B = 1000,
   level = 0.95,
-  type = c("basic", "percentile"),
+  type = c("percentile", "basic"),
   locus_ci = TRUE
 )
 }
@@ -19,7 +19,10 @@ boot_pairwise(
 
 \item{level}{Confidence level.}
 
-\item{type}{\code{"basic"} (default) or \code{"percentile"} intervals.}
+\item{type}{Interval type: \code{"percentile"} (default; the 2.5\% and 97.5\%
+quantiles of the bootstrap values, for \code{level = 0.95}) or \code{"basic"}
+(the same quantiles reflected around the estimate, which corrects for
+the bias estimated by the bootstrap).}
 
 \item{locus_ci}{If \code{TRUE} (default), compute intervals for each locus as
 well as for the mean. \code{FALSE} gives per-locus values without intervals
@@ -33,6 +36,9 @@ A list with
 \code{locus_ci = TRUE}, \code{value_lower}, \code{value_upper}, \code{value_bias} and
 \code{value_corrected}.}
 \item{mean}{Same table for the mean over loci, always with intervals.}
+\item{overall}{Mean of each statistic over all pairs and loci, with
+\code{value_lower}, \code{value_upper}, \code{value_bias} and \code{value_corrected},
+computed from the same mean within each bootstrap replicate.}
 \item{B}{Number of bootstrap replicates used.}
 \item{level}{Confidence level of the intervals.}
 \item{type}{Interval type used.}
