@@ -102,14 +102,14 @@ boot_pairwise <- function(genotypes, B = 1000, level = 0.95,
   boot_loc  <- if (locus_ci) array(NA_real_, dim = c(P, 4, L, B)) else NULL
 
   for (b in seq_len(B)) {
-    if (b %% 10 == 0) message("bootstrap ", b, "/", B)
+    if (b %% 50 == 0) message("bootstrap ", b, "/", B)
     idx <- boot_indices(genotypes$pop)
     v   <- pairwise_values(microsat_freq(genotypes[idx, ], lv), up)
     boot_mean[, , b] <- v$mean
     boot_overall_mean[, b] <- apply(v$per_locus, 2, mean, na.rm = TRUE)
     if (locus_ci) boot_loc[, , , b] <- v$per_locus
   }
-  # per-locus tables
+  # per-locus tables with CI
   estimate <- lapply(seq_len(L), function(l) {
     est <- matrix(obs$per_locus[, , l], nrow = P)
     ci  <- if (locus_ci) pairs_ci(est, array(boot_loc[, , l, ], dim = c(P, 4, B)), level=level, type=type) else NULL
@@ -117,11 +117,11 @@ boot_pairwise <- function(genotypes, B = 1000, level = 0.95,
   })
   names(estimate) <- names(lv)
 
-  # per-pair means over loci
+  # per-pair means over loci with Ci
   mean_tab <- pairs_table(obs$mean, pairs = pairs,
                           ci = pairs_ci(obs$mean, boot_mean, level = level, type = type))
 
-  # overall mean over all pairs and loci
+  # overall mean over all pairs and loci with CI
   overall_mean <- cbind(data.frame(statistic = stat_names, value = overall_obs),
                    boot_ci_core(overall_obs, boot_overall_mean, level = level, type = type))
 
@@ -154,11 +154,13 @@ pairwise_H <- function(f) {
 # Returns a list of four population x population matrices.
 pairwise_locus <- function(f) {
   h   <- pairwise_H(f)
+  mono <- h$HT < 1e-12                       # both populations fixed for the same allele (M = 1)
   FST <- ifelse(h$HT < 1e-12, 0, 1 - h$HS / h$HT)   # set FST to 0 (instead of NaN) if HT=0
-  list(M      = h$M,
-       FST    = FST,
-       "G'ST" = FST * (1 + h$HS) / (1 - h$HS),
-       D      = 2 * (h$HT - h$HS) / (1 - h$HS))
+  out <- list(M      = h$M,
+              FST    = FST,
+              "G'ST" = FST * (1 + h$HS) / (1 - h$HS),
+              D      = 2 * (h$HT - h$HS) / (1 - h$HS))
+  lapply(out, function(m) { m[mono] <- NA; m })   # exclude these combinations everywhere
 }
 
 # Per-locus values and their mean over loci, for the pairs in `up`.
