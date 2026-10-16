@@ -1,0 +1,170 @@
+---
+title: "plot_bootstrap_results"
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 1
+)
+```
+
+This Rmd runs functions for the outputs of application results in Lim et al.
+
+```{r setup}
+library(PopGenBounds)
+library(patchwork)
+
+dir_path <- "C:/Users/limy/OneDrive - International Agency for Research on Cancer/Documents/NoahCollab/code/output"
+```
+
+
+## Load genotype data and allele frequencies
+```{r}
+toad_genotypes <- PopGenBounds::toad_genotypes
+Toad_microsat_freq = PopGenBounds::Toad_microsat_freq
+
+# fix allele order for each locus
+lv   <- microsat_allele_levels(toad_genotypes)
+```
+
+## Run (or load) bootstrap on global population (K = 47)
+
+```{r run global bootstrap}
+set.seed(2021)
+res <- boot_stat(toad_genotypes, stat_fun = Diff, B = 1000, type="percentile")
+res$mean             # check the labels in the 'statistic' column
+```
+```{r save bootstrap output}
+saveRDS(res, file.path(dir_path, "global_bootstrap_B1000.rds"))
+```
+
+```{r load saved bootstrap object}
+boot_res_global <- readRDS(file.path(dir_path, "global_bootstrap_B1000.rds"))
+names(boot_res_global)
+```
+## Plot statistics distributions for global comparison
+
+```{r, fig.width = 8, fig.height = 3}
+get <- function(s) sapply(res$estimate, function(d) d$value[d$statistic == s])
+
+ggtoad <- ggbounds_raw(M = get("M"), FST = get("FST"), GpST = get("G'ST"), D = get("D"),
+                       K = 47, ci = res$mean, density_colors = FALSE, ci_style="bands")
+
+ggtoad[[1]] + ggtoad[[2]] + ggtoad[[3]]
+```
+## Run (or load) pairwise bootstrap (K = 2)
+
+```{r}
+set.seed(2021)
+res_pw <- boot_pairwise(toad_genotypes, B = 1000)
+```
+```{r save boot output}
+saveRDS(res_pw, file.path(dir_path, "pairwise_bootstrap_B1000_monomorph_excluded.rds"))
+```
+
+```{r check mono exclusion}
+pts <- do.call(rbind, res_pw$estimate)
+get <- function(s) pts$value[pts$statistic == s]
+
+sum(!is.na(get("FST")))                                             # 9622, as in the old code
+all.equal(sort(get("FST")), sort(toad.tib_pairs$FST))               # TRUE (sort drops NA)
+all.equal(mean(get("FST"), na.rm = TRUE),
+          res_pw$overall$value[res_pw$overall$statistic == "FST"])  # TRUE: red dot
+```
+
+
+```{r load saved bootstrap object}
+boot_res_pw <- readRDS(file.path(dir_path, "pairwise_bootstrap_B1000.rds"))
+names(boot_res_pw)
+```
+
+```{r compare old and new stats values -- delete once not needed}
+m_new   <- get("M")
+fst_new <- get("FST")[m_new < 1]                # same filter as in the old code
+fst_old <- toad.tib_pairs$FST
+
+length(fst_new); length(fst_old)                # should be equal
+all.equal(sort(fst_new), sort(fst_old))         # TRUE if the same set of values
+```
+```{r check the number of stats on monoorphic loci (M=1)}
+pts <- do.call(rbind, lapply(names(boot_res_pw$estimate), function(l)
+  cbind(locus = l, boot_res_pw$estimate[[l]])))
+mono <- pts[pts$statistic == "M" & pts$value >= 1, ]
+table(mono$locus)            # number of monomorphic pairs per locus
+```
+
+## Plot statistics distributions for pairwise comparison
+
+```{r, fig.width = 7, fig.height = 2.5}
+
+pts <- do.call(rbind, res_pw$estimate)                 # all loci and pairs
+get <- function(s) pts$value[pts$statistic == s]
+
+ggtoad_pw = ggbounds_raw(M = get("M"), FST = get("FST"), GpST = get("G'ST"), D = get("D"),
+             K = 2, ci = res_pw$overall, relative_density = FALSE, density_limits = c(0, 5000), density_colors = TRUE)
+
+gg_pairs <- (ggtoad_pw[[1]] + guides(color = "none")) +
+            (ggtoad_pw[[2]] + guides(color = "none")) +
+             ggtoad_pw[[3]]
+gg_pairs
+```
+```{r, with mono loci, fig.width = 7, fig.height = 2.5}
+
+pts <- do.call(rbind, boot_res_pw$estimate)                 # all loci and pairs
+get <- function(s) pts$value[pts$statistic == s]
+
+ggtoad_pw = ggbounds_raw(M = get("M"), FST = get("FST"), GpST = get("G'ST"), D = get("D"),
+             K = 2, ci = boot_res_pw$overall, relative_density = FALSE, density_limits = c(0, 5000), density_colors = TRUE)
+
+gg_pairs <- (ggtoad_pw[[1]] + guides(color = "none")) +
+            (ggtoad_pw[[2]] + guides(color = "none")) +
+             ggtoad_pw[[3]]
+gg_pairs
+```
+
+```{r old function, fig.width = 8, fig.height = 2.5}
+keep <- get("M") < 1          # pair-locus combinations with variation
+
+ggtoad_pairs = ggbounds(M = get("M")[keep], FST = get("FST")[keep], GpST = get("G'ST")[keep], D = get("D")[keep], K=2)
+
+
+gg_pairs <- ggtoad_pairs[[1]]+ scale_color_viridis_c(limits=c(0,5000)) +guides(color="none") + 
+  (ggtoad_pairs[[2]]+ scale_color_viridis_c(limits=c(0,5000)) +guides(color="none") ) + 
+  (ggtoad_pairs[[3]] + scale_color_viridis_c(limits=c(0,5000))) 
+gg_pairs
+
+```
+## Plot individual loci
+```{r, , fig.width = 7, fig.height = 2.7}
+plot_locus <- function(l) {
+  d <- boot_res_pw$estimate[[l]]
+  g <- function(s) d$value[d$statistic == s]
+  p <- ggbounds_raw(M = g("M"), FST = g("FST"), GpST = g("G'ST"), D = g("D"), K = 2,
+                    relative_density = FALSE, density_limits = c(0, 600))
+  p[[1]] <- p[[1]] + ggtitle(l)
+  p[[1]] + p[[2]] + p[[3]]
+}
+
+plot_locus("F22")                                         # one locus
+plot_locus("1A")                                         # one locus
+
+#all_loci <- lapply(names(boot_res_pw$estimate), plot_locus)  # all loci
+#wrap_plots(all_loci, ncol = 1)
+```
+```{r locus summary}
+freq <- microsat_freq(toad_genotypes)
+locus_summary <- data.frame(
+  locus       = names(freq),
+  n_alleles   = sapply(freq, ncol),
+  M_global    = sapply(freq, function(f) max(colMeans(f))),
+  mono_pops   = sapply(freq, function(f) sum(apply(f, 1, max) >= 1 - 1e-12)),
+  mono_pairs  = sapply(boot_res_pw$estimate, function(d)
+                  sum(is.na(d$value[d$statistic == "FST"]))))
+locus_summary
+```
+
+

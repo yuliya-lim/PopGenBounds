@@ -108,3 +108,11 @@ ggtoad_pairs[[1]]+ ggtoad_pairs[[2]]+ ggtoad_pairs[[3]]
 #  (ggtoad[[2]]+ scale_color_viridis(limits=c(0,7)) +guides(color="none") ) + 
 #  (ggtoad[[3]] + scale_color_viridis(limits=c(0,7)))),height = 2.3*2,width=3*3)
 ```
+
+```{r, fig.width = 8, fig.height = 3}
+gg_pairs <- ggtoad_pairs[[1]]+ scale_color_viridis_c(limits=c(0,5000)) +guides(color="none") + 
+  (ggtoad_pairs[[2]]+ scale_color_viridis_c(limits=c(0,5000)) +guides(color="none") ) + 
+  (ggtoad_pairs[[3]] + scale_color_viridis_c(limits=c(0,5000))) 
+gg_pairs
+```
+

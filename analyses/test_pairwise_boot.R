@@ -11,7 +11,7 @@ toad_genotypes <- PopGenBounds::toad_genotypes
 lv   <- microsat_allele_levels(toad_genotypes)
 toad_frequencies <- microsat_freq(toad_genotypes, lv)
 # plot frequency table
-ggfreqtable(toad_frequencies[[1]])
+ggfreqtable(toad_frequencies[["F22"]])
 
 ## Parallel computation of HS, HT, M for each pair of subpopulations -----
 K <- 2
@@ -182,7 +182,7 @@ d <- pw$estimate[["5F"]]
 table(d$statistic)                               # 1081 rows each for M, FST, G'ST, D
 d[d$pop1 == "WUN" & d$pop2 == "LIE", ]
 
-# run bootstrap and compute bootstrap_CI for each pair of statistics
+# run small bootstrap and compute bootstrap_CI for each pair of statistics
 set.seed(1)
 res <- boot_pairwise(toad_genotypes, B = 20)          # with CIs
 names(res)
@@ -190,3 +190,85 @@ names(res)
 pts <- do.call(rbind, res$estimate)
 all.equal(mean(pts$value[pts$statistic == "FST"], na.rm = TRUE),
           res$overall$value[res$overall$statistic == "FST"])   # TRUE
+
+### Run full bootstrap and plot -----
+
+set.seed(2021)
+res_pw <- boot_pairwise(toad_genotypes, B = 1000)
+
+# save results
+out_dir <- "C:/Users/limy/OneDrive - International Agency for Research on Cancer/Documents/NoahCollab/code/output"
+saveRDS(res_pw, file.path(out_dir, "pairwise_bootstrap_B1000.rds"))
+
+# check overall mean
+pts <- do.call(rbind, res_pw$estimate)
+mean(pts$value[pts$statistic == "FST"], na.rm = TRUE)    # mean over the 10,810 plotted points
+res_pw$overall$value[res_pw$overall$statistic == "FST"]  # should be identical
+
+sum(is.nan(pts$value))                                   # how many missing values exist at all
+
+# summary of the results
+f <- res_pw$mean[res_pw$mean$statistic == "FST", ]
+summary(f$value)                          # range of pairwise FST
+summary(f$value_upper - f$value_lower)    # typical CI width
+mean(f$value_lower > 0)                   # share of pairs whose CI excludes 0
+
+# a caterpillar plot
+f <- f[order(f$value), ]
+f$rank <- seq_len(nrow(f))
+ggplot(f, aes(x = rank, y = value, ymin = value_lower, ymax = value_upper)) +
+  geom_linerange(colour = "grey60") +
+  geom_point(size = 0.4) +
+  labs(x = "Population pairs (ranked by FST)", y = expression(italic(F[ST]))) +
+  theme_bw()
+
+caterpillar <- function(tab, stat, y_label) {
+  f <- tab[tab$statistic == stat, ]
+  f <- f[order(f$value), ]
+  f$rank <- seq_len(nrow(f))
+  ggplot(f, aes(x = rank, y = value, ymin = value_lower, ymax = value_upper)) +
+    geom_linerange(colour = "grey60") +
+    geom_point(size = 0.4) +
+    labs(x = paste("Population pairs (ranked by", stat, ")"), y = y_label) +
+    theme_bw()
+}
+
+p_fst  <- caterpillar(res_pw$mean, "FST",  expression(italic(F[ST])))
+p_gpst <- caterpillar(res_pw$mean, "G'ST", expression(italic(G*minute[ST])))
+p_d    <- caterpillar(res_pw$mean, "D",    expression(italic(D)))
+
+p_fst; p_gpst; p_d
+p_fst + p_gpst + p_d
+
+
+# plot pairwise stats
+pts <- do.call(rbind, res_pw$estimate)                 # all loci and pairs
+get <- function(s) pts$value[pts$statistic == s]
+
+ggtoad_pw = ggbounds_raw(M = get("M"), FST = get("FST"), GpST = get("G'ST"), D = get("D"),
+             K = 2, ci = res_pw$overall, density_colors = TRUE)
+
+ggtoad_pw[[1]] + ggtoad_pw[[2]] + ggtoad_pw[[3]]
+## Analysis of bias ----
+
+# global bootstrap (K=47)
+set.seed(2021)
+res_global <- boot_stat(toad_genotypes, stat_fun = Diff, B = 1000)
+
+# The ratio compares the bias with the half-width of the confidence interval
+ratio <- function(tab) with(tab, value_bias / ((value_upper - value_lower) / 2))
+
+# global analysis (K = 47)
+cbind(res$mean[, c("statistic", "value_bias")], ratio = ratio(res$mean))
+
+# pairwise analysis: summaries over the 1,081 pairs
+pw <- res_pw$mean
+tapply(pw$value_bias, pw$statistic, median)          # typical pairwise bias
+tapply(ratio(pw), pw$statistic, median)              # typical bias / half-width
+
+## Check effciency of bootstrap commands -----
+# efficiency checks
+profvis::profvis(boot_pairwise(toad_genotypes, B = 50))
+
+set.seed(2021)
+system.time(res_test <- boot_pairwise(toad_genotypes, B = 50, locus_ci = TRUE))
