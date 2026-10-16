@@ -15,6 +15,10 @@
 #'   relative point density (only used when `density_colors = TRUE`).
 #' @param density_colors Logical; if `TRUE` (default), colour points by
 #'   relative point density, otherwise draw all points in `point_color`.
+#' @param relative_density Logical; if `TRUE` (default), colour points by
+#'   density relative to the maximum (0-1, with a viridis scale). If `FALSE`,
+#'   colour by the raw density and set no colour scale, so that a common scale
+#'   can be added to several plots.
 #' @param point_color Colour of the points when `density_colors = FALSE`.
 #' @param ci Optional data frame with columns `statistic`, `value_lower` and
 #'   `value_upper`, e.g. the `mean` element of [boot_stat()]. If `NULL`
@@ -29,8 +33,8 @@
 #' @import ggplot2
 #' @export
 ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE,
-                         density_colors = TRUE, point_color = "grey30",
-                         ci = NULL, ci_style = c("bands", "cross"),
+                         density_colors = TRUE, relative_density = TRUE, density_limits = NULL,
+                         point_color = "grey30", ci = NULL, ci_style = c("bands", "cross"),
                          ci_names = c(M = "M", FST = "FST", GpST = "G'ST", D = "D")) {
   ci_style <- match.arg(ci_style)
   M_grid <- seq(0.001, 0.999, 0.001)
@@ -47,13 +51,12 @@ ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = F
 
   # per-locus points: coloured by density, or in a single colour
   point_layers <- function() {
-    if (density_colors) {
-      list(ggpointdensity::geom_pointdensity(aes(color = after_stat(density / max(density))), size = 0.8),
-           labs(color = "relative\ndensity"),
-           scale_color_viridis_c())
-    } else {
-      list(geom_point(size = 0.8, col = point_color))
-    }
+    if (!density_colors) return(list(geom_point(size = 0.8, col = point_color)))
+    colour_aes <- if (relative_density) aes(color = after_stat(density / max(density)))
+                  else aes(color = after_stat(density))
+    list(ggpointdensity::geom_pointdensity(colour_aes, size = 0.8),
+         labs(color = if (relative_density) "relative\ndensity" else "density"),
+         scale_color_viridis_c(limits = density_limits, oob = scales::squish))
   }
 
   # CI as shaded bands (drawn first, behind everything)

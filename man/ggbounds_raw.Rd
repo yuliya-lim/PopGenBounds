@@ -12,6 +12,8 @@ ggbounds_raw(
   K = 2,
   show_colorbar = FALSE,
   density_colors = TRUE,
+  relative_density = TRUE,
+  density_limits = NULL,
   point_color = "grey30",
   ci = NULL,
   ci_style = c("bands", "cross"),
@@ -34,6 +36,11 @@ relative point density (only used when \code{density_colors = TRUE}).}
 
 \item{density_colors}{Logical; if \code{TRUE} (default), colour points by
 relative point density, otherwise draw all points in \code{point_color}.}
+
+\item{relative_density}{Logical; if \code{TRUE} (default), colour points by
+density relative to the maximum (0-1, with a viridis scale). If \code{FALSE},
+colour by the raw density and set no colour scale, so that a common scale
+can be added to several plots.}
 
 \item{point_color}{Colour of the points when \code{density_colors = FALSE}.}
 
