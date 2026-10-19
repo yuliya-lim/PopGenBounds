@@ -23,20 +23,30 @@
 #' @param ci Optional data frame with columns `statistic`, `value_lower` and
 #'   `value_upper`, e.g. the `mean` element of [boot_stat()]. If `NULL`
 #'   (default), no intervals are drawn.
+#' @param mean_style How to mark the mean: `"crosshair"` (default; dashed red
+#'   lines through the mean, across the whole plot) or `"bound"` (solid red
+#'   segment from 0 to the upper bound at the mean of \eqn{M}).
 #' @param ci_style How to draw the intervals: `"bands"` (shaded bands across
 #'   the plot) or `"cross"` (crossed error bars centred on the intervals).
+#' @param ci_color Colour of the error bars when `ci_style = "cross"`.
+#' @param ci_linewidth Line width of the error bars when `ci_style = "cross"`
+#' @param ci_alpha Transparency of the confidence bands when `ci_style = "bands"`,
+#'   between 0 (invisible) and 1 (opaque).
 #' @param ci_names Named character vector giving, for `M`, `FST`, `GpST` and
 #'   `D`, the label used for that quantity in the `statistic` column of `ci`.
-#'
 #' @return A list of three ggplot objects (\eqn{F_{ST}}, \eqn{G'_{ST}}, \eqn{D});
 #'   an element is `NULL` if the corresponding statistic was not supplied.
 #' @import ggplot2
 #' @export
 ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = FALSE,
                          density_colors = TRUE, relative_density = TRUE, density_limits = NULL,
-                         point_color = "grey30", ci = NULL, ci_style = c("bands", "cross"),
+                         point_color = "grey30", ci = NULL, mean_style = c("crosshair", "bound"),
+                         ci_style = c("bands", "cross"), ci_color = "black", ci_linewidth = 1.5,
+                         ci_alpha = 0.15,
                          ci_names = c(M = "M", FST = "FST", GpST = "G'ST", D = "D")) {
   ci_style <- match.arg(ci_style)
+  mean_style <- match.arg(mean_style)
+
   M_grid <- seq(0.001, 0.999, 0.001)
   mean_M <- mean(M, na.rm = TRUE)
 
@@ -51,12 +61,25 @@ ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = F
 
   # per-locus points: coloured by density, or in a single colour
   point_layers <- function() {
-    if (!density_colors) return(list(geom_point(size = 0.8, col = point_color)))
+    if (!density_colors) return(list(geom_point(size = 1.2, col = point_color)))
     colour_aes <- if (relative_density) aes(color = after_stat(density / max(density)))
                   else aes(color = after_stat(density))
-    list(ggpointdensity::geom_pointdensity(colour_aes, size = 0.8),
+    list(ggpointdensity::geom_pointdensity(colour_aes, size = 1.2),
          labs(color = if (relative_density) "relative\ndensity" else "density"),
          scale_color_viridis_c(limits = density_limits, oob = scales::squish))
+  }
+
+  # lines marking the mean: dashed crosshair, or solid segment from 0 to the bound at mean M
+  mean_lines <- function(mean_y, bound_fun) {
+    if (mean_style == "crosshair") {
+      list(annotate("segment", x = mean_M, xend = mean_M, y = 0, yend = 1,
+                    col = "red", linewidth = 0.4, linetype = "dashed"),
+           annotate("segment", x = 0, xend = 1, y = mean_y, yend = mean_y,
+                    col = "red", linewidth = 0.4, linetype = "dashed"))
+    } else {
+      list(annotate("segment", x = mean_M, xend = mean_M, y = 0, yend = bound_fun(K, mean_M),
+                    col = "red", linewidth = 0.8))
+    }
   }
 
   # CI as shaded bands (drawn first, behind everything)
@@ -64,9 +87,9 @@ ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = F
     if (is.null(ci) || ci_style != "bands") return(NULL)
     m <- ci_row("M"); s <- ci_row(stat)
     list(annotate("rect", xmin = m$value_lower, xmax = m$value_upper, ymin = 0, ymax = 1,
-                  fill = "red", alpha = 0.15),
+                  fill = "red", alpha = ci_alpha),
          annotate("rect", xmin = 0, xmax = 1, ymin = s$value_lower, ymax = s$value_upper,
-                  fill = "red", alpha = 0.15))
+                  fill = "red", alpha = ci_alpha))
   }
 
   # CI as crossed error bars, centred on the middle of the intervals (drawn on top)
@@ -75,12 +98,15 @@ ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = F
     m <- ci_row("M"); s <- ci_row(stat)
     mid_x <- (m$value_lower + m$value_upper) / 2
     mid_y <- (s$value_lower + s$value_upper) / 2
-    list(geom_errorbar(data = data.frame(x = mid_x, ymin = s$value_lower, ymax = s$value_upper),
-                       aes(x = x, ymin = ymin, ymax = ymax), inherit.aes = FALSE,
-                       width = 0.005, linewidth = 0.4, col = "black"),
-         geom_errorbar(data = data.frame(y = mid_y, xmin = m$value_lower, xmax = m$value_upper),
-                       aes(y = y, xmin = xmin, xmax = xmax), inherit.aes = FALSE,
-                       width = 0.005, linewidth = 0.4, col = "black", orientation = "y"))
+    bars <- list(geom_errorbar(data = data.frame(x = mid_x, ymin = s$value_lower, ymax = s$value_upper),
+                               aes(x = x, ymin = ymin, ymax = ymax), inherit.aes = FALSE,
+                               width = 0.02, linewidth = ci_linewidth, col = ci_color))
+    if (m$value_upper > m$value_lower)                      # horizontal bar only if M has an interval
+      bars <- c(bars, list(geom_errorbar(data = data.frame(y = mid_y, xmin = m$value_lower, xmax = m$value_upper),
+                                         aes(y = y, xmin = xmin, xmax = xmax), inherit.aes = FALSE,
+                                         width = 0.02, linewidth = ci_linewidth, col = ci_color,
+                                         orientation = "y")))
+    bars
   }
 
   # one plot: statistic y against M, with its bound function and axis label
@@ -88,16 +114,13 @@ ggbounds_raw <- function(M, FST, GpST = NULL, D = NULL, K = 2, show_colorbar = F
     #mean_y <- mean(y, na.rm = TRUE)
     mean_y <- if (is.null(ci)) mean(y, na.rm = TRUE) else ci_row(stat)$value
     p <- ggplot(data.frame(M = M, y = y), aes(x = M, y = y)) +
-      ci_bands(stat) +
       point_layers() +
       geom_line(data = data.frame(M = M_grid, y = bound_fun(K, M_grid)),
                 aes(x = M, y = y), inherit.aes = FALSE) +
-      annotate("segment", x = mean_M, xend = mean_M, y = 0, yend = 1,
-               col = "red", linewidth = 0.4, linetype = "dashed") +
-      annotate("segment", x = 0, xend = 1, y = mean_y, yend = mean_y,
-               col = "red", linewidth = 0.4, linetype = "dashed") +
-      annotate("point", x = mean_M, y = mean_y, col = "red", size = 2) +
+      ci_bands(stat) +
+      mean_lines(mean_y, bound_fun) +
       ci_cross(stat) +
+      annotate("point", x = mean_M, y = mean_y, col = "red", size = 2) +
       coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
       xlab(expression(italic(M))) +
       ylab(y_label) +

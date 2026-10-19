@@ -16,7 +16,11 @@ ggbounds_raw(
   density_limits = NULL,
   point_color = "grey30",
   ci = NULL,
+  mean_style = c("crosshair", "bound"),
   ci_style = c("bands", "cross"),
+  ci_color = "black",
+  ci_linewidth = 1.5,
+  ci_alpha = 0.15,
   ci_names = c(M = "M", FST = "FST", GpST = "G'ST", D = "D")
 )
 }
@@ -48,8 +52,19 @@ can be added to several plots.}
 \code{value_upper}, e.g. the \code{mean} element of \code{\link[=boot_stat]{boot_stat()}}. If \code{NULL}
 (default), no intervals are drawn.}
 
+\item{mean_style}{How to mark the mean: \code{"crosshair"} (default; dashed red
+lines through the mean, across the whole plot) or \code{"bound"} (solid red
+segment from 0 to the upper bound at the mean of \eqn{M}).}
+
 \item{ci_style}{How to draw the intervals: \code{"bands"} (shaded bands across
 the plot) or \code{"cross"} (crossed error bars centred on the intervals).}
+
+\item{ci_color}{Colour of the error bars when \code{ci_style = "cross"}.}
+
+\item{ci_linewidth}{Line width of the error bars when \code{ci_style = "cross"}}
+
+\item{ci_alpha}{Transparency of the confidence bands when \code{ci_style = "bands"},
+between 0 (invisible) and 1 (opaque).}
 
 \item{ci_names}{Named character vector giving, for \code{M}, \code{FST}, \code{GpST} and
 \code{D}, the label used for that quantity in the \code{statistic} column of \code{ci}.}
